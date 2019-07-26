@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="283dp"
+            android:layout_height="140dp">
+
+        <TextView
+                android:id="@+id/titleTextView"
+                style="@style/dialog_title_textview_style"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:layout_marginEnd="8dp"
+                app:layout_constraintStart_toStartOf="parent"
+                android:layout_marginStart="8dp"
+                app:layout_constraintTop_toTopOf="parent"/>
+
+        <Button
+                android:text="@string/relogin"
+                android:id="@+id/reloginButton"
+                android:layout_width="133dp"
+                android:layout_height="33dp"
+                android:background="@drawable/blue_gradient_button_background"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                android:layout_marginBottom="20dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:textColor="@drawable/blue_gradient_button_text_color">
+            <requestFocus/>
+        </Button>
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:app="http://schemas.android.com/apk/res-auto"
+            android:id="@+id/back_order_nav_graph"
+            app:startDestination="@id/backOrderInputAndScanFragment">
+
+    <fragment
+            android:id="@+id/backOrderInputAndScanFragment"
+            android:name="com.topsmarteye.warehousepicking.backOrder.BackOrderInputAndScanFragment"
+            android:label="BackOrderInputAndScanFragment">
+        <action
+                android:id="@+id/action_backOrderInputAndScanFragment_to_backOrderSubmitFragment"
+                app:destination="@id/backOrderSubmitFragment"/>
+    </fragment>
+    <fragment
+            android:id="@+id/backOrderSubmitFragment"
+            android:name="com.topsmarteye.warehousepicking.backOrder.BackOrderSubmitFragment"
+            android:label="BackOrderSubmitFragment"/>
+</navigation>

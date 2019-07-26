@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <data>
+
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layout_constraintBaseline_toBaselineOf="@+id/orderNumberLabel"
+            android:background="@color/grey_layout_background_color">
+
+
+        <ImageView
+                android:id="@+id/orderNumberImageView"
+                app:layout_constraintTop_toTopOf="parent"
+                android:layout_marginTop="21dp"
+                app:layout_constraintStart_toStartOf="parent"
+                android:layout_marginStart="48dp"
+                style="@style/order_number_blue_bar_style"/>
+
+        <TextView
+                android:layout_width="wrap_content"
+                android:text="@string/order_number"
+                android:id="@+id/orderNumberLabel"
+                app:layout_constraintTop_toTopOf="@+id/orderNumberImageView"
+                app:layout_constraintBottom_toBottomOf="@+id/orderNumberImageView"
+                app:layout_constraintStart_toEndOf="@+id/orderNumberImageView"
+                android:layout_marginStart="13dp"
+                style="@style/order_number_textview_style"
+                app:layout_constraintVertical_bias="0.22000003"/>
+
+        <EditText
+                android:layout_width="0dp"
+                android:id="@+id/orderNumberEditText"
+                app:layout_constraintStart_toEndOf="@+id/orderNumberLabel"
+                android:layout_marginStart="13dp"
+                app:layout_constraintBaseline_toBaselineOf="@+id/orderNumberLabel"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:layout_marginEnd="52dp"
+                android:hint="@string/order_number_edit_hint"
+                style="@style/input_and_scan_edit_text_style">
+            <requestFocus/>
+        </EditText>
+
+        <ImageButton
+                android:layout_width="50dp"
+                android:layout_height="0dp"
+                app:srcCompat="@drawable/scan_icon"
+                android:id="@+id/scanButton"
+                android:background="@drawable/square_button_background"
+                app:layout_constraintTop_toTopOf="@+id/orderNumberEditText"
+                app:layout_constraintBottom_toBottomOf="@+id/orderNumberEditText"
+                app:layout_constraintEnd_toEndOf="@+id/orderNumberEditText"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</layout>

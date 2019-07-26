@@ -1,0 +1,85 @@
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <!-- Customize your theme here. -->
+    </style>
+
+    <style name="DialogNoTitle" parent="Theme.AppCompat.Light.Dialog">
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="stock_list_item_label_style">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">17sp</item>
+        <item name="android:textColor">@color/light_grey_text_color</item>
+    </style>
+
+    <style name="stock_list_item_textview_style">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:textColor">@color/black_text_color</item>
+    </style>
+
+    <style name="stock_list_item_action_button_style">
+        <item name="android:layout_width">87dp</item>
+        <item name="android:layout_height">27dp</item>
+        <item name="android:background">@drawable/blue_gradient_button_background</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@drawable/blue_gradient_button_text_color</item>
+    </style>
+
+    <style name="input_and_scan_edit_text_style">
+        <item name="android:layout_height">33dp</item>
+        <item name="android:inputType">number</item>
+        <item name="android:ems">10</item>
+        <item name="android:background">@drawable/edit_text_background</item>
+        <item name="android:shadowDx">0</item>
+        <item name="android:shadowDy">0</item>
+        <item name="android:shadowColor">@color/edit_text_shadow_color</item>
+        <item name="android:shadowRadius">90</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:textSize">17sp</item>
+        <item name="android:textColor">@color/dark_grey_text_color</item>
+        <item name="android:paddingStart">13dp</item>
+        <item name="android:paddingEnd">52dp</item>
+        <item name="android:imeOptions">actionDone</item>
+    </style>
+
+    <style name="task_selection_profile_textview_style">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">17sp</item>
+        <item name="android:textColor">@color/white_text_color</item>
+    </style>
+
+    <style name="order_number_textview_style">
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">@color/dark_grey_text_color</item>
+        <item name="android:textSize">17sp</item>
+        <item name="android:singleLine">true</item>
+    </style>
+
+    <style name="order_number_blue_bar_style">
+        <item name="android:background">@drawable/order_number_rectangle</item>
+        <item name="android:layout_width">5dp</item>
+        <item name="android:layout_height">25dp</item>
+    </style>
+
+    <style name="appbar_textview_style">
+        <item name="android:textColor">@color/appbar_text_color</item>
+        <item name="android:textSize">17sp</item>
+    </style>
+
+    <style name="dialog_title_textview_style">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">@color/dark_grey_text_color</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:layout_marginTop">31dp</item>
+    </style>
+
+
+</resources>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:app="http://schemas.android.com/apk/res-auto"
+            xmlns:tools="http://schemas.android.com/tools"
+            android:id="@+id/nav_graph"
+            app:startDestination="@id/stockListInputAndScanFragment">
+    <fragment
+            android:id="@+id/stockListInputAndScanFragment"
+            android:name="com.topsmarteye.warehousepicking.stockList.StockListInputAndScanFragment"
+            android:label="StockListInputAndScanFragment"
+            tools:layout="@layout/fragment_stock_list_input_and_scan">
+        <action
+                android:id="@+id/action_stockListInputAndScanFragment_to_stockListFragment"
+                app:destination="@id/stockListFragment"/>
+    </fragment>
+    <fragment
+            android:id="@+id/stockListFragment"
+            android:name="com.topsmarteye.warehousepicking.stockList.StockListFragment"
+            android:label="StockListFragment"
+            tools:layout="@layout/fragment_stock_list">
+        <argument
+                android:name="orderNumber"
+                app:argType="string"/>
+    </fragment>
+</navigation>
