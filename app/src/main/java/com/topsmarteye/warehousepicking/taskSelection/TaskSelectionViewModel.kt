@@ -4,8 +4,11 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.topsmarteye.warehousepicking.network.ApiStatus
 import com.topsmarteye.warehousepicking.network.LoginApi
 import kotlinx.coroutines.*
+import java.lang.Exception
+
 
 class TaskSelectionViewModel : ViewModel() {
 
@@ -21,17 +24,14 @@ class TaskSelectionViewModel : ViewModel() {
     val isLoggedIn: LiveData<Boolean>
         get() = _isLoggedIn
 
-    private val _isLoading = MutableLiveData<Boolean>()
-    val isLoading: LiveData<Boolean>
-        get() = _isLoading
-
-    private val _isNetworkError = MutableLiveData<Boolean>()
-    val isNetworkError: LiveData<Boolean>
-        get() = _isNetworkError
+    private val _apiStatus = MutableLiveData<ApiStatus>()
+    val apiStatus: LiveData<ApiStatus>
+        get() = _apiStatus
 
     private val _isQRCodeError = MutableLiveData<Boolean>()
     val isQRCodeError: LiveData<Boolean>
         get() = _isQRCodeError
+
 
     private var viewModelJob = Job()
     private val coroutineScope = CoroutineScope(viewModelJob + Dispatchers.Main)
@@ -41,41 +41,39 @@ class TaskSelectionViewModel : ViewModel() {
     }
 
     fun getTokenAndLogin(username: String, password: Int) {
-        _isLoading.value = true
+        _apiStatus.value = ApiStatus.LOADING
         coroutineScope.launch {
-            try {
-                val tokenResponse
-                        = LoginApi.retrofitService.getLoginToken("testRest", 123456)
-                if (tokenResponse.isSuccessful) {
-                    val token = tokenResponse.body()!!
-
-                    val loginResponse = LoginApi.retrofitService.login(token, username, password)
-                    if (loginResponse.isSuccessful) {
-                        val userProperty = loginResponse.body()!!
-                        _isLoggedIn.value = true
-                        _displayName.value = userProperty.data.displayName
-                        _workID.value = userProperty.data.workID
-                    } else {
-                        _isNetworkError.value = true
-                    }
-                } else {
-                    _isNetworkError.value = true
-                }
-            } catch (e: Exception) {
-                Log.d("TaskSelectionViewModel", "Failed login: ${e.message}")
-                _isNetworkError.value = true
+            val tokenResultSuccessful = LoginApi.updateAuthToken()
+            if (tokenResultSuccessful && LoginApi.authToken != null && LoginApi.authToken != "") {
+                val token = LoginApi.authToken!!
+                getUserData(token, username, password)
+            } else {
+                _apiStatus.value = ApiStatus.ERROR
             }
-            _isLoading.value = false
+        }
+    }
+
+    private suspend fun getUserData(token: String, username: String, password: Int) {
+
+        try {
+            val loginResponse = LoginApi.retrofitService.login(token, username, password)
+            if (loginResponse.isSuccessful) {
+                val userProperty = loginResponse.body()!!
+                _isLoggedIn.value = true
+                _displayName.value = userProperty.userData.displayName
+                _workID.value = userProperty.userData.workID
+                _apiStatus.value = ApiStatus.DONE
+            } else {
+                _apiStatus.value = ApiStatus.ERROR
+            }
+        } catch (e: Exception) {
+            Log.d("TaskSelectionViewModel", "getUserData failed ${e.message}")
         }
     }
 
     fun onLogOut() {
         _isLoggedIn.value = false
         _displayName.value = null
-    }
-
-    fun onNetworkErrorComplete() {
-        _isNetworkError.value = false
     }
 
     fun onQRCodeError() {

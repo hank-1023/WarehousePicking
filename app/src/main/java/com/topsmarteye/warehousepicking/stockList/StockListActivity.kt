@@ -2,6 +2,7 @@ package com.topsmarteye.warehousepicking.stockList
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.GestureDetector
 import android.view.KeyEvent
 import android.view.MotionEvent
@@ -48,7 +49,7 @@ class StockListActivity : AppCompatActivity() {
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         if (isStart && keyCode == KeyEvent.KEYCODE_STAR) {
-            stockListViewModel.onScanTriggeredByKeyboard()
+            stockListViewModel.onScan()
             return true
         } else if (!isStart) {
             when (keyCode) {
@@ -99,6 +100,7 @@ class StockListActivity : AppCompatActivity() {
     }
 
     private fun changeNavItemsVisibility(destination: NavDestination) {
+        Log.d("destination", destination.id.toString())
         if (destination.id == navController.graph.startDestination) {
             binding.currentIndexTextView.visibility = View.GONE
             binding.resetOrderButton.visibility = View.GONE
@@ -120,8 +122,12 @@ class StockListActivity : AppCompatActivity() {
 
     private inner class FlingGestureListener : GestureDetector.SimpleOnGestureListener() {
         override fun onFling(e1: MotionEvent?, e2: MotionEvent?, velocityX: Float, velocityY: Float): Boolean {
-            stockListViewModel.onScanTriggeredByKeyboard()
-            return true
+            if (isStart) {
+                stockListViewModel.onScan()
+                return true
+            } else {
+                return false
+            }
         }
 
     }

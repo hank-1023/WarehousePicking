@@ -3,6 +3,7 @@ package com.topsmarteye.warehousepicking.stockList
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -30,14 +31,11 @@ class StockListFragment : Fragment() {
             R.layout.fragment_stock_list, container, false)
         binding.lifecycleOwner = this
 
-        val inputFragmentArgs by navArgs<StockListFragmentArgs>()
-
         // Get shared viewModel
         stockListViewModel = activity?.run {
             ViewModelProviders.of(this).get(StockListViewModel::class.java)
         } ?: throw Exception("Invalid Activity")
 
-        stockListViewModel.onDataLoaded(inputFragmentArgs.orderNumber)
         binding.stockListViewModel = stockListViewModel
 
         setViewModelObserver()

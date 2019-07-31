@@ -9,15 +9,15 @@ import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import com.google.zxing.integration.android.IntentIntegrator
-import com.topsmarteye.warehousepicking.LOGIN_ACTIVITY_REQUESTCODE
+import com.topsmarteye.warehousepicking.LOGIN_ACTIVITY_REQUEST_CODE
 import com.topsmarteye.warehousepicking.backOrder.BackOrderActivity
 import com.topsmarteye.warehousepicking.R
-import com.topsmarteye.warehousepicking.RELOGIN_DIALOG_REQUEST_CODE
+import com.topsmarteye.warehousepicking.RETRY_DIALOG_REQUEST_CODE
 import com.topsmarteye.warehousepicking.stockList.StockListActivity
 import com.topsmarteye.warehousepicking.databinding.ActivityTaskSelectionBinding
-import com.topsmarteye.warehousepicking.dialog.ReloginDialogActivity
-import com.topsmarteye.warehousepicking.dialog.RestockDialogActivity
+import com.topsmarteye.warehousepicking.dialog.RetryDialogActivity
 import com.topsmarteye.warehousepicking.hideSystemUI
+import com.topsmarteye.warehousepicking.network.ApiStatus
 import java.lang.Exception
 
 class TaskSelectionActivity : AppCompatActivity() {
@@ -50,7 +50,7 @@ class TaskSelectionActivity : AppCompatActivity() {
     private fun setupIntegrator() {
         integrator = IntentIntegrator(this)
         integrator.captureActivity = LoginBarcodeScanActivity::class.java
-        integrator.setRequestCode(LOGIN_ACTIVITY_REQUESTCODE)
+        integrator.setRequestCode(LOGIN_ACTIVITY_REQUEST_CODE)
         integrator.setDesiredBarcodeFormats(IntentIntegrator.QR_CODE)
     }
 
@@ -84,20 +84,16 @@ class TaskSelectionActivity : AppCompatActivity() {
             binding.staffIDTextView.text = it
         })
 
-        viewModel.isLoading.observe(this, Observer {
-            if (it) {
-                dialog.show()
-            } else {
-                dialog.dismiss()
-                // call hide again in case the ui wasn't hidden
-                hideSystemUI()
-            }
-        })
 
-        viewModel.isNetworkError.observe(this, Observer {
-            if (it) {
-                popDialogWithMessage(getString(R.string.network_error_message))
-                viewModel.onNetworkErrorComplete()
+        viewModel.apiStatus.observe(this, Observer { status ->
+            when (status) {
+                ApiStatus.LOADING -> dialog.show()
+                ApiStatus.ERROR -> {
+                    dismissLoadingDialog()
+                    popDialogWithMessage(getString(R.string.network_error_message))
+                }
+                ApiStatus.DONE -> dismissLoadingDialog()
+                else -> return@Observer
             }
         })
 
@@ -107,13 +103,20 @@ class TaskSelectionActivity : AppCompatActivity() {
                 viewModel.onQRCodeErrorComplete()
             }
         })
+
     }
 
     private fun popDialogWithMessage(message: String) {
-        val intent = Intent(this, ReloginDialogActivity::class.java).apply {
+        val intent = Intent(this, RetryDialogActivity::class.java).apply {
             putExtra("dialogTitle", message)
+            putExtra("buttonTitle", getString(R.string.relogin))
         }
-        startActivityForResult(intent, RELOGIN_DIALOG_REQUEST_CODE)
+        startActivityForResult(intent, RETRY_DIALOG_REQUEST_CODE)
+    }
+
+    private fun dismissLoadingDialog() {
+        dialog.dismiss()
+        hideSystemUI()
     }
 
     override fun onResume() {
@@ -125,8 +128,8 @@ class TaskSelectionActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         when (requestCode) {
-            RELOGIN_DIALOG_REQUEST_CODE -> viewModel.onLogOut()
-            LOGIN_ACTIVITY_REQUESTCODE -> parseScannerResult(resultCode, data)
+            RETRY_DIALOG_REQUEST_CODE -> viewModel.onLogOut()
+            LOGIN_ACTIVITY_REQUEST_CODE -> parseScannerResult(resultCode, data)
         }
     }
 

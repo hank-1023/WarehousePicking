@@ -17,9 +17,5 @@
             android:id="@+id/stockListFragment"
             android:name="com.topsmarteye.warehousepicking.stockList.StockListFragment"
             android:label="StockListFragment"
-            tools:layout="@layout/fragment_stock_list">
-        <argument
-                android:name="orderNumber"
-                app:argType="string"/>
-    </fragment>
+            tools:layout="@layout/fragment_stock_list"/>
 </navigation>

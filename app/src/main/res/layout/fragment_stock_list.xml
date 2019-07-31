@@ -69,8 +69,8 @@
                         app:layout_constraintEnd_toEndOf="parent"/>
 
                 <TextView
-                        android:id="@+id/categoryLabel"
-                        android:text="@string/item_category"
+                        android:id="@+id/IDLabel"
+                        android:text="@string/item_id"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintHorizontal_bias="0.5"
                         app:layout_constraintEnd_toStartOf="@+id/nameLabel"
@@ -81,10 +81,10 @@
                 <TextView
                         android:id="@+id/nameLabel"
                         android:text="@string/item_name"
-                        app:layout_constraintStart_toEndOf="@+id/categoryLabel"
+                        app:layout_constraintStart_toEndOf="@+id/IDLabel"
                         app:layout_constraintHorizontal_bias="0.5"
                         app:layout_constraintEnd_toStartOf="@+id/quantityLabel"
-                        app:layout_constraintBaseline_toBaselineOf="@+id/categoryLabel"
+                        app:layout_constraintBaseline_toBaselineOf="@+id/IDLabel"
                         style="@style/stock_list_item_label_style"/>
 
                 <TextView
@@ -106,11 +106,11 @@
                         style="@style/stock_list_item_label_style"/>
 
                 <TextView
-                        android:id="@+id/categoryTextView"
-                        android:text="@{stockListViewModel.currentItem.category}"
+                        android:id="@+id/IDTextView"
+                        android:text="@{stockListViewModel.currentItem.id}"
                         tools:text="化妆品"
-                        app:layout_constraintEnd_toEndOf="@+id/categoryLabel"
-                        app:layout_constraintStart_toStartOf="@+id/categoryLabel"
+                        app:layout_constraintEnd_toEndOf="@+id/IDLabel"
+                        app:layout_constraintStart_toStartOf="@+id/IDLabel"
                         android:layout_marginTop="10dp"
                         app:layout_constraintTop_toBottomOf="@+id/itemHeaderView"
                         style="@style/stock_list_item_textview_style"/>
@@ -121,7 +121,7 @@
                         tools:text="Dior"
                         app:layout_constraintStart_toStartOf="@+id/nameLabel"
                         app:layout_constraintEnd_toEndOf="@+id/nameLabel"
-                        app:layout_constraintBaseline_toBaselineOf="@+id/categoryTextView"
+                        app:layout_constraintBaseline_toBaselineOf="@+id/IDTextView"
                         style="@style/stock_list_item_textview_style"/>
 
                 <TextView
@@ -149,7 +149,7 @@
                         android:id="@+id/currentItemCardViewdividerLine"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@+id/categoryTextView"
+                        app:layout_constraintTop_toBottomOf="@+id/IDTextView"
                         android:layout_marginTop="10dp"/>
 
                 <Button
@@ -207,8 +207,8 @@
                     android:id="@+id/nextItemCardViewConstraintLayout">
 
                 <TextView
-                        android:id="@+id/nextItemCategoryLabel"
-                        android:text="@string/item_category"
+                        android:id="@+id/nextItemIDLabel"
+                        android:text="@string/item_id"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintStart_toEndOf="parent"
                         app:layout_constraintHorizontal_bias="0.5"
@@ -220,10 +220,10 @@
                 <TextView
                         android:id="@+id/nextItemNameLabel"
                         android:text="@string/item_name"
-                        app:layout_constraintStart_toEndOf="@+id/nextItemCategoryLabel"
+                        app:layout_constraintStart_toEndOf="@+id/nextItemIDLabel"
                         app:layout_constraintHorizontal_bias="0.5"
                         app:layout_constraintEnd_toStartOf="@+id/nextItemQuantityLabel"
-                        app:layout_constraintBaseline_toBaselineOf="@+id/nextItemCategoryLabel"
+                        app:layout_constraintBaseline_toBaselineOf="@+id/nextItemIDLabel"
                         style="@style/stock_list_item_label_style"/>
 
                 <TextView
@@ -255,11 +255,11 @@
                         app:layout_constraintStart_toStartOf="parent"/>
 
                 <TextView
-                        android:id="@+id/nextItemCategoryTextView"
-                        android:text="@{stockListViewModel.nextItem.category}"
+                        android:id="@+id/nextItemIDTextView"
+                        android:text="@{stockListViewModel.nextItem.id}"
                         tools:text="化妆品"
-                        app:layout_constraintEnd_toEndOf="@+id/nextItemCategoryLabel"
-                        app:layout_constraintStart_toStartOf="@+id/nextItemCategoryLabel"
+                        app:layout_constraintEnd_toEndOf="@+id/nextItemIDLabel"
+                        app:layout_constraintStart_toStartOf="@+id/nextItemIDLabel"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintTop_toBottomOf="@+id/nextItemCardViewDividerLine"
                         app:layout_constraintHorizontal_bias="0.5"
@@ -271,7 +271,7 @@
                         tools:text="Dior"
                         app:layout_constraintEnd_toEndOf="@+id/nextItemNameLabel"
                         app:layout_constraintStart_toStartOf="@+id/nextItemNameLabel"
-                        app:layout_constraintBaseline_toBaselineOf="@+id/nextItemCategoryTextView"
+                        app:layout_constraintBaseline_toBaselineOf="@+id/nextItemIDTextView"
                         style="@style/stock_list_item_textview_style"/>
 
                 <TextView
@@ -299,7 +299,7 @@
                         android:id="@+id/nextItemLabel"
                         app:layout_constraintStart_toStartOf="parent"
                         android:layout_marginStart="30dp"
-                        app:layout_constraintEnd_toStartOf="@+id/nextItemCategoryLabel"
+                        app:layout_constraintEnd_toStartOf="@+id/nextItemIDLabel"
                         android:layout_marginEnd="30dp"
                         app:layout_constraintTop_toTopOf="parent"
                         app:layout_constraintBottom_toTopOf="@+id/nextItemCardViewDividerLine"

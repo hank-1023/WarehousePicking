@@ -20,8 +20,7 @@
                 app:layout_constraintTop_toTopOf="parent"/>
 
         <Button
-                android:text="@string/relogin"
-                android:id="@+id/reloginButton"
+                android:id="@+id/retryButton"
                 android:layout_width="133dp"
                 android:layout_height="33dp"
                 android:background="@drawable/blue_gradient_button_background"
@@ -30,6 +29,7 @@
                 android:layout_marginBottom="20dp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 android:textColor="@drawable/blue_gradient_button_text_color">
+
             <requestFocus/>
         </Button>
 

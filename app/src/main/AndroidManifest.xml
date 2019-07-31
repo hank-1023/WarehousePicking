@@ -45,7 +45,7 @@
                   android:theme="@style/DialogNoTitle">
         </activity>
 
-        <activity android:name="com.topsmarteye.warehousepicking.dialog.ReloginDialogActivity"
+        <activity android:name="com.topsmarteye.warehousepicking.dialog.RetryDialogActivity"
                   android:screenOrientation="landscape"
                   android:theme="@style/DialogNoTitle">
         </activity>

@@ -3,23 +3,12 @@ package com.topsmarteye.warehousepicking.stockList
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.topsmarteye.warehousepicking.network.ApiStatus
+import com.topsmarteye.warehousepicking.network.LoginApi
+import com.topsmarteye.warehousepicking.network.StockItem
+import kotlinx.coroutines.*
 
 class StockListViewModel : ViewModel() {
-    data class Order(val orderNumber: String, val itemList: List<StockItem>)
-
-    data class StockItem(val category: String,
-                         val name: String,
-                         val quantity: Int,
-                         val location: String)
-
-    private val sampleOrder = Order(
-        "76543210", listOf(
-            StockItem("化妆品", "Dior", 2, "6排6列5层"),
-            StockItem("食品", "KFC", 4, "6排6列3层"),
-            StockItem("IT", "富士康", 4, "6排6列12层"),
-            StockItem("奶茶", "一点点", 20, "6排6列34层")
-        )
-    )
 
     // The live data of order number
     private val _orderNumber = MutableLiveData<String>()
@@ -28,7 +17,7 @@ class StockListViewModel : ViewModel() {
 
 
     // The live data field of stock item list
-    private val itemList: List<StockItem>
+    private var itemList: List<StockItem>? = null
 
     private val _currentIndex = MutableLiveData<Int>()
     val currentIndex: LiveData<Int>
@@ -70,36 +59,76 @@ class StockListViewModel : ViewModel() {
     val eventScan: LiveData<Boolean>
         get() = _eventScan
 
+    private val _apiStatus = MutableLiveData<ApiStatus>()
+    val apiStatus: LiveData<ApiStatus>
+        get() = _apiStatus
+
+    private val _eventNavigateToList = MutableLiveData<Boolean>()
+    val eventNavigateToList: LiveData<Boolean>
+        get() = _eventNavigateToList
+
+    private var viewModelJob = Job()
+    private val coroutineScope = CoroutineScope(viewModelJob + Dispatchers.Main)
+
 
     init {
-        itemList = sampleOrder.itemList
-        _currentIndex.value = 0
-        _isLastItem.value = false
-        _totalItems.value = sampleOrder.itemList.size
+        // Need initialization here because onRestock methods needs false checking
         _eventRestock.value = false
         _eventOutOfStock.value = false
         _eventResetOrder.value = false
-        _eventScan.value = false
+    }
 
+    fun loadStockList(orderNumber: String) {
+        _apiStatus.value = ApiStatus.LOADING
+        coroutineScope.launch {
+            var response = LoginApi.retrofitService.getOrderItems(LoginApi.authToken!!, orderNumber, 0)
+            if (!response.isSuccessful) {
+                LoginApi.updateAuthToken()
+                response = LoginApi.retrofitService.getOrderItems(LoginApi.authToken!!, orderNumber, 0)
+            }
+            if (response.isSuccessful) {
+                if (!response.body()?.stockList.isNullOrEmpty()) {
+                    itemList = response.body()?.stockList
+                    onDataLoaded()
+                    _orderNumber.value = orderNumber
+                    _apiStatus.value = ApiStatus.DONE
+                } else {
+                    _apiStatus.value = ApiStatus.ERROR
+                }
+            } else {
+                _apiStatus.value = ApiStatus.ERROR
+            }
+        }
+    }
+
+    private fun onDataLoaded() {
+        // Reset viewModel Properties
+        _totalItems.value = itemList!!.size
+        _currentIndex.value = 0
+        _isLastItem.value = false
+        // update currentItem and nextItem
         updateDataWithIndex(0)
     }
 
+
     // Update the mutable live data with the index passed in
     private fun updateDataWithIndex(index: Int) {
-        _currentItem.value = itemList[index]
+        itemList!!.let {
+            _currentItem.value = it[index]
 
-        if (index < itemList.size - 1) {
-            _nextItem.value = itemList[index + 1]
-        } else {
-            _nextItem.value = null
-            _isLastItem.value = true
+            if (index < it.size - 1) {
+                _nextItem.value = it[index + 1]
+            } else {
+                _nextItem.value = null
+                _isLastItem.value = true
+            }
         }
-
     }
+
 
     // Increase currentIndex by 1 and call updateDataWithIndex
     fun onNext() {
-        if (_currentIndex.value!! < itemList.size - 1) {
+        if (_currentIndex.value!! < itemList!!.size - 1) {
             _currentIndex.value = _currentIndex.value!! + 1
             updateDataWithIndex(_currentIndex.value!!)
         }
@@ -149,16 +178,26 @@ class StockListViewModel : ViewModel() {
         _eventFinishOrder.value = false
     }
 
-    fun onDataLoaded(orderNumber: String) {
-        _orderNumber.value = orderNumber
-    }
-
-    fun onScanTriggeredByKeyboard() {
+    fun onScan() {
         _eventScan.value = true
     }
 
-    fun onScanTriggeredByKeyboardComplete() {
+    fun onScanComplete() {
         _eventScan.value = false
+    }
+
+    fun onNavigation() {
+        _eventNavigateToList.value = true
+    }
+
+    fun onNavigationComplete() {
+        _eventNavigateToList.value = false
+        _apiStatus.value = ApiStatus.NONE
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        viewModelJob.cancel()
     }
 
 

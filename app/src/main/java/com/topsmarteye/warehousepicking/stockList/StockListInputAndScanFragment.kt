@@ -12,6 +12,8 @@ import androidx.navigation.fragment.findNavController
 import com.google.zxing.integration.android.IntentIntegrator
 import com.topsmarteye.warehousepicking.R
 import com.topsmarteye.warehousepicking.databinding.FragmentStockListInputAndScanBinding
+import com.topsmarteye.warehousepicking.dialog.RetryDialogActivity
+import com.topsmarteye.warehousepicking.network.ApiStatus
 
 
 class StockListInputAndScanFragment : Fragment() {
@@ -39,9 +41,44 @@ class StockListInputAndScanFragment : Fragment() {
             if (it) {
                 binding.scanButton.requestFocus()
                 binding.scanButton.performClick()
-                viewModel.onScanTriggeredByKeyboardComplete()
+                viewModel.onScanComplete()
             }
         })
+
+        viewModel.apiStatus.observe(this, Observer {
+            when (it) {
+                ApiStatus.LOADING -> startLoadingAnimation()
+                ApiStatus.DONE -> {
+                    stopLoadingAnimation()
+                    viewModel.onNavigation()
+                }
+                ApiStatus.ERROR -> {
+                    stopLoadingAnimation()
+                    popDialogWithMessage(getString(R.string.get_order_error_message))
+                }
+                else -> return@Observer
+            }
+        })
+
+        viewModel.eventNavigateToList.observe(this, Observer {
+            if (it) {
+                findNavController().navigate(StockListInputAndScanFragmentDirections
+                    .actionStockListInputAndScanFragmentToStockListFragment())
+                viewModel.onNavigationComplete()
+            }
+        })
+    }
+
+    private fun startLoadingAnimation() {
+        binding.orderNumberEditText.isEnabled = false
+        binding.scanButton.isEnabled = false
+        binding.loadingProgressGroup.visibility = View.VISIBLE
+    }
+
+    private fun stopLoadingAnimation() {
+        binding.orderNumberEditText.isEnabled = true
+        binding.scanButton.isEnabled = true
+        binding.loadingProgressGroup.visibility = View.GONE
     }
 
     private fun setupIntegrator() {
@@ -70,6 +107,14 @@ class StockListInputAndScanFragment : Fragment() {
         }
     }
 
+    private fun popDialogWithMessage(message: String) {
+        val intent = Intent(context, RetryDialogActivity::class.java).apply {
+            putExtra("dialogTitle", message)
+            putExtra("buttonTitle", getString(R.string.retry))
+        }
+        startActivity(intent)
+    }
+
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         val result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data)
@@ -82,7 +127,6 @@ class StockListInputAndScanFragment : Fragment() {
     }
 
     private fun retrieveOrder(orderNumber: String) {
-        findNavController().navigate(StockListInputAndScanFragmentDirections.
-            actionStockListInputAndScanFragmentToStockListFragment(orderNumber))
+        viewModel.loadStockList(orderNumber)
     }
 }

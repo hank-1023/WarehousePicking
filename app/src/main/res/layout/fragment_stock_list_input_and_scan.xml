@@ -43,6 +43,7 @@
                 android:layout_marginEnd="52dp"
                 android:hint="@string/order_number_edit_hint"
                 style="@style/input_and_scan_edit_text_style">
+
             <requestFocus/>
         </EditText>
 
@@ -55,6 +56,37 @@
                 app:layout_constraintTop_toTopOf="@+id/orderNumberEditText"
                 app:layout_constraintBottom_toBottomOf="@+id/orderNumberEditText"
                 app:layout_constraintEnd_toEndOf="@+id/orderNumberEditText"/>
+
+        <ProgressBar
+                style="?android:attr/progressBarStyle"
+                android:layout_width="75dp"
+                android:layout_height="75dp"
+                android:id="@+id/progressBar"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/orderNumberEditText"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintBottom_toTopOf="@+id/LoadingTextView"
+                app:layout_constraintVertical_chainStyle="packed"
+                android:layout_marginBottom="15dp"/>
+
+        <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/LoadingTextView"
+                app:layout_constraintStart_toStartOf="@+id/progressBar"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/progressBar"
+                app:layout_constraintEnd_toEndOf="@+id/progressBar"
+                android:text="@string/loading"
+                android:textSize="18sp"/>
+
+        <androidx.constraintlayout.widget.Group
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/loadingProgressGroup"
+                app:constraint_referenced_ids="LoadingTextView,progressBar"
+                android:visibility="gone"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
