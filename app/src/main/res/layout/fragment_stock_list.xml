@@ -107,7 +107,7 @@
 
                 <TextView
                         android:id="@+id/IDTextView"
-                        android:text="@{stockListViewModel.currentItem.id}"
+                        android:text="@{stockListViewModel.currentItem.stockId}"
                         tools:text="化妆品"
                         app:layout_constraintEnd_toEndOf="@+id/IDLabel"
                         app:layout_constraintStart_toStartOf="@+id/IDLabel"
@@ -184,6 +184,7 @@
                         app:layout_constraintTop_toTopOf="@+id/needsRestockingButton"
                         app:layout_constraintBottom_toBottomOf="@+id/needsRestockingButton"
                         android:id="@+id/nextButton">
+
                     <requestFocus/>
                 </Button>
 
@@ -256,7 +257,7 @@
 
                 <TextView
                         android:id="@+id/nextItemIDTextView"
-                        android:text="@{stockListViewModel.nextItem.id}"
+                        android:text="@{stockListViewModel.nextItem.stockId}"
                         tools:text="化妆品"
                         app:layout_constraintEnd_toEndOf="@+id/nextItemIDLabel"
                         app:layout_constraintStart_toStartOf="@+id/nextItemIDLabel"
@@ -326,6 +327,34 @@
                 android:textColor="@drawable/blue_gradient_button_text_color"
                 android:visibility="gone"
                 android:onClick="@{() -> stockListViewModel.onFinishOrder()}"/>
+
+        <ProgressBar
+                style="?android:attr/progressBarStyle"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:id="@+id/submitProgressBar"
+                app:layout_constraintBottom_toTopOf="@+id/currentItemCardView"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/submitTextView"
+                android:layout_marginEnd="13dp"/>
+
+        <TextView
+                android:text="@string/submitting"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/submitTextView"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toTopOf="@+id/currentItemCardView"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:layout_marginEnd="100dp"
+                app:layout_constraintVertical_bias="0.51"/>
+
+        <androidx.constraintlayout.widget.Group
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/submitGroup"
+                app:constraint_referenced_ids="submitProgressBar,submitTextView"
+                android:visibility="gone"/>
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>

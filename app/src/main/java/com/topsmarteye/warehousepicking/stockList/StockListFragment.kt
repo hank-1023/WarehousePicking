@@ -20,6 +20,8 @@ import com.topsmarteye.warehousepicking.RESTOCK_DIALOG_REQUEST_CODE
 import com.topsmarteye.warehousepicking.dialog.RestockDialogActivity
 import com.topsmarteye.warehousepicking.dialog.YesNoDialogActivity
 import com.topsmarteye.warehousepicking.databinding.FragmentStockListBinding
+import com.topsmarteye.warehousepicking.dialog.RetryDialogActivity
+import com.topsmarteye.warehousepicking.network.ApiStatus
 
 class StockListFragment : Fragment() {
 
@@ -87,6 +89,18 @@ class StockListFragment : Fragment() {
                 activity?.finish()
             }
         })
+
+        stockListViewModel.updateApiStatus.observe(this, Observer {
+            when (it!!) {
+                ApiStatus.LOADING -> binding.submitGroup.visibility = View.VISIBLE
+                ApiStatus.ERROR -> {
+                    binding.submitGroup.visibility = View.GONE
+                    popUpdateError()
+                }
+                ApiStatus.DONE -> binding.submitGroup.visibility = View.GONE
+                ApiStatus.NONE -> return@Observer
+            }
+        })
     }
 
     private fun popRestock() {
@@ -106,6 +120,14 @@ class StockListFragment : Fragment() {
             putExtra("dialogTitle", getString(R.string.confirm_reset_order))
         }
         startActivityForResult(intent, RESET_ORDER_DIALOG_REQUEST_CODE)
+    }
+
+    private fun popUpdateError() {
+        val intent = Intent(context, RetryDialogActivity::class.java).apply {
+            putExtra("dialogTitle", getString(R.string.network_error_message))
+            putExtra("buttonTitle", getString(R.string.retry))
+        }
+        startActivity(intent)
     }
 
 

@@ -18,6 +18,7 @@ import com.topsmarteye.warehousepicking.databinding.ActivityTaskSelectionBinding
 import com.topsmarteye.warehousepicking.dialog.RetryDialogActivity
 import com.topsmarteye.warehousepicking.hideSystemUI
 import com.topsmarteye.warehousepicking.network.ApiStatus
+import com.topsmarteye.warehousepicking.network.UserStatus
 import java.lang.Exception
 
 class TaskSelectionActivity : AppCompatActivity() {
@@ -38,8 +39,8 @@ class TaskSelectionActivity : AppCompatActivity() {
         setupIntegrator()
         setupViewListener()
         setupViewModelListener()
-
     }
+
 
     private fun setupProgressDialog() {
         dialog = ProgressDialog(this)
@@ -74,11 +75,11 @@ class TaskSelectionActivity : AppCompatActivity() {
     }
 
     private fun setupViewModelListener() {
-        viewModel.isLoggedIn.observe(this, Observer {
-            if (!it) {
-                integrator.initiateScan()
-            }
-        })
+//        viewModel.isLoggedIn.observe(this, Observer {
+//            if (!it) {
+//                integrator.initiateScan()
+//            }
+//        })
 
         viewModel.displayName.observe(this, Observer {
             binding.staffIDTextView.text = it
@@ -97,10 +98,17 @@ class TaskSelectionActivity : AppCompatActivity() {
             }
         })
 
-        viewModel.isQRCodeError.observe(this, Observer {
+        viewModel.eventQRCodeError.observe(this, Observer {
             if (it) {
                 popDialogWithMessage(getString(R.string.qrcode_error_message))
                 viewModel.onQRCodeErrorComplete()
+            }
+        })
+
+
+        UserStatus.isLoggedIn.observe(this, Observer {
+            if (!it) {
+                integrator.initiateScan()
             }
         })
 
@@ -128,6 +136,7 @@ class TaskSelectionActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         when (requestCode) {
+            // Dialog dismissed and should perform logout on viewModel
             RETRY_DIALOG_REQUEST_CODE -> viewModel.onLogOut()
             LOGIN_ACTIVITY_REQUEST_CODE -> parseScannerResult(resultCode, data)
         }

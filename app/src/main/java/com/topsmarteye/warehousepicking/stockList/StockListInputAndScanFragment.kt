@@ -14,6 +14,7 @@ import com.topsmarteye.warehousepicking.R
 import com.topsmarteye.warehousepicking.databinding.FragmentStockListInputAndScanBinding
 import com.topsmarteye.warehousepicking.dialog.RetryDialogActivity
 import com.topsmarteye.warehousepicking.network.ApiStatus
+import com.topsmarteye.warehousepicking.network.UserStatus
 
 
 class StockListInputAndScanFragment : Fragment() {
@@ -45,7 +46,7 @@ class StockListInputAndScanFragment : Fragment() {
             }
         })
 
-        viewModel.apiStatus.observe(this, Observer {
+        viewModel.loadApiStatus.observe(this, Observer {
             when (it) {
                 ApiStatus.LOADING -> startLoadingAnimation()
                 ApiStatus.DONE -> {

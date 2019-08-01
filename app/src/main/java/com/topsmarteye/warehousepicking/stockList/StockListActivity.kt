@@ -16,6 +16,7 @@ import androidx.navigation.findNavController
 import com.topsmarteye.warehousepicking.R
 import com.topsmarteye.warehousepicking.databinding.ActivityStockListBinding
 import com.topsmarteye.warehousepicking.hideSystemUI
+import com.topsmarteye.warehousepicking.network.UserStatus
 
 
 class StockListActivity : AppCompatActivity() {
@@ -37,7 +38,7 @@ class StockListActivity : AppCompatActivity() {
 
         gestureDetector = GestureDetector(this, FlingGestureListener())
 
-        setupActionBarListener()
+        setupListener()
 
     }
 
@@ -85,16 +86,25 @@ class StockListActivity : AppCompatActivity() {
         return super.onTouchEvent(event)
     }
 
-    private fun setupActionBarListener() {
+    private fun setupListener() {
         navController.addOnDestinationChangedListener { _, destination, _ ->
             changeNavItemsVisibility(destination)
         }
+
         binding.upButton.setOnClickListener {
             onUpButtonPressed()
         }
+
         stockListViewModel.currentIndex.observe(this, Observer {
             binding.currentIndexTextView.text =
                 resources.getString(R.string.current_index_format, it + 1, stockListViewModel.totalItems.value)
+        })
+
+        // Finish the activity if user is not logged in
+        UserStatus.isLoggedIn.observe(this, Observer {
+            if (!it) {
+                finish()
+            }
         })
 
     }

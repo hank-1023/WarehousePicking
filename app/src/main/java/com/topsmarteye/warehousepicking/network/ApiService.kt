@@ -1,9 +1,10 @@
 package com.topsmarteye.warehousepicking.network
 
 import android.util.Log
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import kotlinx.coroutines.*
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
@@ -41,14 +42,19 @@ interface LoginApiService {
                               @Path("taskID", encoded = false) taskID: String,
                               @Query("statuts") status: Int): Response<StockProperty>
 
+    @PUT("pPickDetialController/{stockID}")
+    suspend fun updateOrderItems(@Header("X-AUTH-TOKEN") authToken: String,
+                                 @Path("stockID", encoded = false) stockID: String,
+                                 @Body item: StockItem): Response<Void>
 }
 
 object LoginApi {
-    var authToken: String? = null
-
     val retrofitService: LoginApiService by lazy {
         retrofit.create(LoginApiService::class.java)
     }
+
+    var authToken: String? = null
+
 
     suspend fun updateAuthToken(): Boolean {
         try {
@@ -56,7 +62,9 @@ object LoginApi {
                     = retrofitService.getLoginToken("testRest", 123456)
             if (tokenResponse.isSuccessful) {
                 authToken = tokenResponse.body()
-                return true
+                if (!authToken.isNullOrEmpty()) {
+                    return true
+                }
             } else {
                 Log.d("LoginApi", "Update auth token response unsuccessful")
             }
@@ -67,5 +75,46 @@ object LoginApi {
         return false
     }
 
+}
 
+object UserStatus {
+    private var userData: UserData? = null
+    private val loggedIn = MutableLiveData<Boolean>()
+    val isLoggedIn: LiveData<Boolean>
+        get() = loggedIn
+
+    init {
+        loggedIn.value = false
+    }
+
+    suspend fun loginUser(username: String, password: Int): Boolean {
+        try {
+            val response = LoginApi.retrofitService.login(LoginApi.authToken!!, username, password)
+            if (response.isSuccessful && response.body() != null) {
+                userData = response.body()!!.userData
+                loggedIn.value = true
+                return true
+            } else {
+                Log.d("UserStatus", "login user unsuccessful ${response.message()}")
+            }
+        } catch (e: Exception) {
+            Log.d("UserStatus", "login user exception ${e.message}")
+        }
+
+        return false
+    }
+
+    fun getUserData(): UserData? {
+        return if (loggedIn.value!!) {
+            // Will crash the app if tried to get userdata when not isLoggedIn
+            userData!!
+        } else {
+            null
+        }
+    }
+
+    fun logOut() {
+        userData = null
+        loggedIn.value = false
+    }
 }

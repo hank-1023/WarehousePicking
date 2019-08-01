@@ -1,12 +1,16 @@
 package com.topsmarteye.warehousepicking.stockList
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.topsmarteye.warehousepicking.network.ApiStatus
+import com.topsmarteye.warehousepicking.network.ItemState
 import com.topsmarteye.warehousepicking.network.LoginApi
 import com.topsmarteye.warehousepicking.network.StockItem
 import kotlinx.coroutines.*
+import java.text.SimpleDateFormat
+import java.util.*
 
 class StockListViewModel : ViewModel() {
 
@@ -59,9 +63,13 @@ class StockListViewModel : ViewModel() {
     val eventScan: LiveData<Boolean>
         get() = _eventScan
 
-    private val _apiStatus = MutableLiveData<ApiStatus>()
-    val apiStatus: LiveData<ApiStatus>
-        get() = _apiStatus
+    private val _loadApiStatus = MutableLiveData<ApiStatus>()
+    val loadApiStatus: LiveData<ApiStatus>
+        get() = _loadApiStatus
+
+    private val _updateApiStatus = MutableLiveData<ApiStatus>()
+    val updateApiStatus: LiveData<ApiStatus>
+        get() = _updateApiStatus
 
     private val _eventNavigateToList = MutableLiveData<Boolean>()
     val eventNavigateToList: LiveData<Boolean>
@@ -79,29 +87,34 @@ class StockListViewModel : ViewModel() {
     }
 
     fun loadStockList(orderNumber: String) {
-        _apiStatus.value = ApiStatus.LOADING
         coroutineScope.launch {
+            _loadApiStatus.value = ApiStatus.LOADING
             var response = LoginApi.retrofitService.getOrderItems(LoginApi.authToken!!, orderNumber, 0)
             if (!response.isSuccessful) {
-                LoginApi.updateAuthToken()
-                response = LoginApi.retrofitService.getOrderItems(LoginApi.authToken!!, orderNumber, 0)
+                //update auth token if out-of-date
+                if (LoginApi.updateAuthToken()) {
+                    response = LoginApi.retrofitService.getOrderItems(LoginApi.authToken!!, orderNumber, 0)
+                } else {
+                    _loadApiStatus.value = ApiStatus.ERROR
+                    return@launch
+                }
             }
             if (response.isSuccessful) {
                 if (!response.body()?.stockList.isNullOrEmpty()) {
                     itemList = response.body()?.stockList
-                    onDataLoaded()
+                    onListLoaded()
                     _orderNumber.value = orderNumber
-                    _apiStatus.value = ApiStatus.DONE
+                    _loadApiStatus.value = ApiStatus.DONE
                 } else {
-                    _apiStatus.value = ApiStatus.ERROR
+                    _loadApiStatus.value = ApiStatus.ERROR
                 }
             } else {
-                _apiStatus.value = ApiStatus.ERROR
+                _loadApiStatus.value = ApiStatus.ERROR
             }
         }
     }
 
-    private fun onDataLoaded() {
+    private fun onListLoaded() {
         // Reset viewModel Properties
         _totalItems.value = itemList!!.size
         _currentIndex.value = 0
@@ -110,6 +123,74 @@ class StockListViewModel : ViewModel() {
         updateDataWithIndex(0)
     }
 
+    // Increase currentIndex by 1 and call updateDataWithIndex
+    fun onNext() {
+        if (_currentIndex.value!! < itemList!!.size - 1) {
+
+            coroutineScope.launch {
+                _updateApiStatus.value = ApiStatus.LOADING
+                putCompleteItemForIndex(currentIndex.value!!)
+                // check if update is successful
+                if (_updateApiStatus.value != ApiStatus.ERROR) {
+                    // Increment the current Index
+                    _currentIndex.value = _currentIndex.value!! + 1
+                    putWorkingItemForIndex(currentIndex.value!!)
+
+                    // check if update is successful
+                    if (_updateApiStatus.value != ApiStatus.ERROR) {
+                        updateDataWithIndex(_currentIndex.value!!)
+                    }
+                }
+            }
+        }
+    }
+
+    // Usually not to be called directly
+    private suspend fun putUpdateItem(item: StockItem) {
+        var response = LoginApi.retrofitService.updateOrderItems(LoginApi.authToken!!, item.stockId!!, item)
+        if (!response.isSuccessful) {
+            if (LoginApi.updateAuthToken()) {
+                response = LoginApi.retrofitService.updateOrderItems(LoginApi.authToken!!, item.stockId, item)
+            } else {
+                _updateApiStatus.value = ApiStatus.ERROR
+                return
+            }
+        }
+
+        if (response.isSuccessful) {
+            _updateApiStatus.value = ApiStatus.DONE
+        } else {
+            _updateApiStatus.value = ApiStatus.ERROR
+            Log.d("StockListViewModel", "putUpdate Item error ${response.message()}")
+        }
+    }
+
+    private suspend fun putCompleteItemForIndex(index: Int) {
+
+        itemList!![index].let { item ->
+            item.updateDate = getCurrentTimeString()
+            // item finished
+            item.finishTime = getCurrentTimeString()
+            item.status = ItemState.COMPLETE.value
+
+            putUpdateItem(item)
+        }
+    }
+
+    private suspend fun putWorkingItemForIndex(index: Int) {
+        itemList!![index].let { item ->
+            item.updateDate = getCurrentTimeString()
+            item.status = ItemState.WORKING.value
+
+            putUpdateItem(item)
+        }
+
+    }
+
+    private fun getCurrentTimeString(): String {
+        val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+        return simpleDateFormat.format(Date())
+    }
 
     // Update the mutable live data with the index passed in
     private fun updateDataWithIndex(index: Int) {
@@ -122,15 +203,6 @@ class StockListViewModel : ViewModel() {
                 _nextItem.value = null
                 _isLastItem.value = true
             }
-        }
-    }
-
-
-    // Increase currentIndex by 1 and call updateDataWithIndex
-    fun onNext() {
-        if (_currentIndex.value!! < itemList!!.size - 1) {
-            _currentIndex.value = _currentIndex.value!! + 1
-            updateDataWithIndex(_currentIndex.value!!)
         }
     }
 
@@ -192,7 +264,7 @@ class StockListViewModel : ViewModel() {
 
     fun onNavigationComplete() {
         _eventNavigateToList.value = false
-        _apiStatus.value = ApiStatus.NONE
+        _loadApiStatus.value = ApiStatus.NONE
     }
 
     override fun onCleared() {
