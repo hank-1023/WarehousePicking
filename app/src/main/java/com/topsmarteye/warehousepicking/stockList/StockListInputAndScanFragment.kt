@@ -14,7 +14,6 @@ import com.topsmarteye.warehousepicking.R
 import com.topsmarteye.warehousepicking.databinding.FragmentStockListInputAndScanBinding
 import com.topsmarteye.warehousepicking.dialog.RetryDialogActivity
 import com.topsmarteye.warehousepicking.network.ApiStatus
-import com.topsmarteye.warehousepicking.network.UserStatus
 
 
 class StockListInputAndScanFragment : Fragment() {
@@ -56,6 +55,7 @@ class StockListInputAndScanFragment : Fragment() {
                 ApiStatus.ERROR -> {
                     stopLoadingAnimation()
                     popDialogWithMessage(getString(R.string.get_order_error_message))
+                    viewModel.onInputNetworkErrorComplete()
                 }
                 else -> return@Observer
             }

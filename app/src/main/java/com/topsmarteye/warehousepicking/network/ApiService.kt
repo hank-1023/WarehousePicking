@@ -43,9 +43,9 @@ interface LoginApiService {
                               @Query("statuts") status: Int): Response<StockProperty>
 
     @PUT("pPickDetialController/{stockID}")
-    suspend fun updateOrderItems(@Header("X-AUTH-TOKEN") authToken: String,
-                                 @Path("stockID", encoded = false) stockID: String,
-                                 @Body item: StockItem): Response<Void>
+    suspend fun updateOrderItem(@Header("X-AUTH-TOKEN") authToken: String,
+                                @Path("stockID", encoded = false) stockID: String,
+                                @Body item: StockItem): Response<Void>
 }
 
 object LoginApi {

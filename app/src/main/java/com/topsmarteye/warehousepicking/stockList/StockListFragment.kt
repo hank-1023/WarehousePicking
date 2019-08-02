@@ -96,6 +96,7 @@ class StockListFragment : Fragment() {
                 ApiStatus.ERROR -> {
                     binding.submitGroup.visibility = View.GONE
                     popUpdateError()
+                    stockListViewModel.onUpdateNetworkErrorComplete()
                 }
                 ApiStatus.DONE -> binding.submitGroup.visibility = View.GONE
                 ApiStatus.NONE -> return@Observer

@@ -58,6 +58,8 @@ dependencies {
     // moshi
     implementation "com.squareup.moshi:moshi:$version_moshi"
     implementation "com.squareup.moshi:moshi-kotlin:$version_moshi"
+    implementation "com.squareup.moshi:moshi-adapters:$version_moshi"
+
 
     // retrofit
     implementation "com.squareup.retrofit2:retrofit: $version_retrofit"
@@ -67,4 +69,7 @@ dependencies {
     // room database
     implementation "androidx.room:room-runtime:$version_room"
     kapt "androidx.room:room-compiler:$version_room"
+
+    // Joda-time
+    implementation 'joda-time:joda-time:2.10.3'
 }

@@ -4,13 +4,15 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.topsmarteye.warehousepicking.network.ApiStatus
-import com.topsmarteye.warehousepicking.network.ItemState
-import com.topsmarteye.warehousepicking.network.LoginApi
-import com.topsmarteye.warehousepicking.network.StockItem
+import com.topsmarteye.warehousepicking.network.*
 import kotlinx.coroutines.*
-import java.text.SimpleDateFormat
+import org.joda.time.DateTime
+import org.joda.time.DateTimeZone
+import org.joda.time.format.DateTimeFormat
+import org.joda.time.format.ISODateTimeFormat
+import java.lang.Exception
 import java.util.*
+
 
 class StockListViewModel : ViewModel() {
 
@@ -75,6 +77,10 @@ class StockListViewModel : ViewModel() {
     val eventNavigateToList: LiveData<Boolean>
         get() = _eventNavigateToList
 
+    private val _eventDateFormatError = MutableLiveData<Exception>()
+    val eventDateFormatError: LiveData<Exception>
+        get() = _eventDateFormatError
+
     private var viewModelJob = Job()
     private val coroutineScope = CoroutineScope(viewModelJob + Dispatchers.Main)
 
@@ -89,28 +95,36 @@ class StockListViewModel : ViewModel() {
     fun loadStockList(orderNumber: String) {
         coroutineScope.launch {
             _loadApiStatus.value = ApiStatus.LOADING
-            var response = LoginApi.retrofitService.getOrderItems(LoginApi.authToken!!, orderNumber, 0)
-            if (!response.isSuccessful) {
-                //update auth token if out-of-date
-                if (LoginApi.updateAuthToken()) {
-                    response = LoginApi.retrofitService.getOrderItems(LoginApi.authToken!!, orderNumber, 0)
+
+            try {
+                var response = LoginApi.retrofitService.getOrderItems(LoginApi.authToken!!, orderNumber, 0)
+                if (!response.isSuccessful) {
+                    //update auth token if out-of-date
+                    if (LoginApi.updateAuthToken()) {
+                        response = LoginApi.retrofitService.getOrderItems(LoginApi.authToken!!, orderNumber, 0)
+                    } else {
+                        _loadApiStatus.value = ApiStatus.ERROR
+                        return@launch
+                    }
+                }
+                if (response.isSuccessful) {
+                    if (!response.body()?.stockList.isNullOrEmpty()) {
+                        itemList = response.body()?.stockList
+                        onListLoaded()
+                        _orderNumber.value = orderNumber
+                        _loadApiStatus.value = ApiStatus.DONE
+                    } else {
+                        _loadApiStatus.value = ApiStatus.ERROR
+                    }
                 } else {
                     _loadApiStatus.value = ApiStatus.ERROR
-                    return@launch
                 }
-            }
-            if (response.isSuccessful) {
-                if (!response.body()?.stockList.isNullOrEmpty()) {
-                    itemList = response.body()?.stockList
-                    onListLoaded()
-                    _orderNumber.value = orderNumber
-                    _loadApiStatus.value = ApiStatus.DONE
-                } else {
-                    _loadApiStatus.value = ApiStatus.ERROR
-                }
-            } else {
+            } catch (e: Exception) {
+                Log.d("loadStockList", "Load stock list network error ${e.message}")
                 _loadApiStatus.value = ApiStatus.ERROR
             }
+
+
         }
     }
 
@@ -129,28 +143,29 @@ class StockListViewModel : ViewModel() {
 
             coroutineScope.launch {
                 _updateApiStatus.value = ApiStatus.LOADING
-                putCompleteItemForIndex(currentIndex.value!!)
-                // check if update is successful
-                if (_updateApiStatus.value != ApiStatus.ERROR) {
-                    // Increment the current Index
-                    _currentIndex.value = _currentIndex.value!! + 1
-                    putWorkingItemForIndex(currentIndex.value!!)
 
+                try {
+                    putCompleteItemForIndex(currentIndex.value!!)
                     // check if update is successful
                     if (_updateApiStatus.value != ApiStatus.ERROR) {
+                        _currentIndex.value = _currentIndex.value!! + 1
                         updateDataWithIndex(_currentIndex.value!!)
                     }
+                } catch (e: Exception) {
+                    Log.d("onNext", "onNext error ${e.message}")
+                    _updateApiStatus.value = ApiStatus.ERROR
                 }
+
             }
         }
     }
 
     // Usually not to be called directly
     private suspend fun putUpdateItem(item: StockItem) {
-        var response = LoginApi.retrofitService.updateOrderItems(LoginApi.authToken!!, item.stockId!!, item)
+        var response = LoginApi.retrofitService.updateOrderItem(LoginApi.authToken!!, item.stockId!!, item)
         if (!response.isSuccessful) {
             if (LoginApi.updateAuthToken()) {
-                response = LoginApi.retrofitService.updateOrderItems(LoginApi.authToken!!, item.stockId, item)
+                response = LoginApi.retrofitService.updateOrderItem(LoginApi.authToken!!, item.stockId, item)
             } else {
                 _updateApiStatus.value = ApiStatus.ERROR
                 return
@@ -171,25 +186,68 @@ class StockListViewModel : ViewModel() {
             item.updateDate = getCurrentTimeString()
             // item finished
             item.finishTime = getCurrentTimeString()
-            item.status = ItemState.COMPLETE.value
+            item.status = ItemState.NOTPICKED.value
 
-            putUpdateItem(item)
+            item.createDate?.let {
+                item.createDate = formatExistingDateString(it)
+            }
+
+            UserStatus.getUserData()!!.let {
+                item.updateName = it.displayName
+                item.updateBy = it.workID
+                putUpdateItem(item)
+            }
+
         }
     }
 
-    private suspend fun putWorkingItemForIndex(index: Int) {
-        itemList!![index].let { item ->
-            item.updateDate = getCurrentTimeString()
-            item.status = ItemState.WORKING.value
+//    private suspend fun putWorkingItemForIndex(index: Int) {
+//        itemList!![index].let { item ->
+//            item.updateDate = getCurrentTimeString()
+//            item.status = ItemState.NOTPICKED.value
+//
+//
+//            // reformat existing date strings
+//            item.createDate?.let {
+//                item.createDate = formatExistingDateString(it)
+//            }
+//            item.finishTime?.let {
+//                item.finishTime = formatExistingDateString(it)
+//            }
+//
+//            UserStatus.getUserData()!!.let {
+//                item.updateName = it.displayName
+//                item.updateBy = it.workID
+//                putUpdateItem(item)
+//            }
+//        }
+//
+//    }
 
-            putUpdateItem(item)
+    private fun formatExistingDateString(dateString: String): String? {
+        var formattedString: String? = null
+
+        val fmtWithSeconds = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss").withLocale(Locale.CHINA)
+        val fmtNoSecond = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm").withLocale(Locale.CHINA)
+
+        try {
+            val dt = fmtWithSeconds.parseDateTime(dateString).withZone(DateTimeZone.forID("Asia/Shanghai"))
+            formattedString = dt.toString()
+        } catch (e: Exception) {
+            try {
+                val dt = fmtNoSecond.parseDateTime(dateString).withZone(DateTimeZone.forID("Asia/Shanghai"))
+                formattedString = dt.toString()
+            } catch (e: Exception) {
+                Log.d("formatDateString", "Unknown date format ${e.message}")
+            }
+        } finally {
+            return formattedString
         }
-
     }
 
     private fun getCurrentTimeString(): String {
-        val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-        return simpleDateFormat.format(Date())
+        val dt = DateTime()
+        return dt.toString()
     }
 
     // Update the mutable live data with the index passed in
@@ -265,6 +323,14 @@ class StockListViewModel : ViewModel() {
     fun onNavigationComplete() {
         _eventNavigateToList.value = false
         _loadApiStatus.value = ApiStatus.NONE
+    }
+
+    fun onInputNetworkErrorComplete() {
+        _loadApiStatus.value = ApiStatus.NONE
+    }
+
+    fun onUpdateNetworkErrorComplete() {
+        _updateApiStatus.value = ApiStatus.NONE
     }
 
     override fun onCleared() {
