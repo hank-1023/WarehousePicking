@@ -9,7 +9,6 @@ import kotlinx.coroutines.*
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import org.joda.time.format.DateTimeFormat
-import org.joda.time.format.ISODateTimeFormat
 import java.lang.Exception
 import java.util.*
 
@@ -90,6 +89,8 @@ class StockListViewModel : ViewModel() {
         _eventRestock.value = false
         _eventOutOfStock.value = false
         _eventResetOrder.value = false
+        // Needed to check -- in case of outOfStock or Restock
+        _isLastItem.value = false
     }
 
     fun loadStockList(orderNumber: String) {
@@ -139,24 +140,42 @@ class StockListViewModel : ViewModel() {
 
     // Increase currentIndex by 1 and call updateDataWithIndex
     fun onNext() {
-        if (_currentIndex.value!! < itemList!!.size - 1) {
+        coroutineScope.launch {
+            _updateApiStatus.value = ApiStatus.LOADING
 
-            coroutineScope.launch {
-                _updateApiStatus.value = ApiStatus.LOADING
-
-                try {
-                    putCompleteItemForIndex(currentIndex.value!!)
-                    // check if update is successful
-                    if (_updateApiStatus.value != ApiStatus.ERROR) {
-                        _currentIndex.value = _currentIndex.value!! + 1
-                        updateDataWithIndex(_currentIndex.value!!)
-                    }
-                } catch (e: Exception) {
-                    Log.d("onNext", "onNext error ${e.message}")
-                    _updateApiStatus.value = ApiStatus.ERROR
+            try {
+                updateItemStatusForIndex(currentIndex.value!!, ItemStatus.NOTPICKED)
+                // check if update is successful
+                if (_updateApiStatus.value != ApiStatus.ERROR) {
+                    _currentIndex.value = _currentIndex.value!! + 1
+                    updateDataWithIndex(_currentIndex.value!!)
                 }
-
+            } catch (e: Exception) {
+                Log.d("onNext", "onNext error ${e.message}")
+                _updateApiStatus.value = ApiStatus.ERROR
             }
+
+        }
+    }
+
+    private suspend fun updateItemStatusForIndex(index: Int, status: ItemStatus) {
+
+        itemList!![index].let { item ->
+            item.updateDate = getCurrentTimeString()
+            // item finished
+            item.finishTime = getCurrentTimeString()
+            item.status = status.value
+
+            item.createDate?.let {
+                item.createDate = formatExistingDateString(it)
+            }
+
+            UserStatus.getUserData()!!.let {
+                item.updateName = it.displayName
+                item.updateBy = it.workID
+                putUpdateItem(item)
+            }
+
         }
     }
 
@@ -180,49 +199,6 @@ class StockListViewModel : ViewModel() {
         }
     }
 
-    private suspend fun putCompleteItemForIndex(index: Int) {
-
-        itemList!![index].let { item ->
-            item.updateDate = getCurrentTimeString()
-            // item finished
-            item.finishTime = getCurrentTimeString()
-            item.status = ItemState.NOTPICKED.value
-
-            item.createDate?.let {
-                item.createDate = formatExistingDateString(it)
-            }
-
-            UserStatus.getUserData()!!.let {
-                item.updateName = it.displayName
-                item.updateBy = it.workID
-                putUpdateItem(item)
-            }
-
-        }
-    }
-
-//    private suspend fun putWorkingItemForIndex(index: Int) {
-//        itemList!![index].let { item ->
-//            item.updateDate = getCurrentTimeString()
-//            item.status = ItemState.NOTPICKED.value
-//
-//
-//            // reformat existing date strings
-//            item.createDate?.let {
-//                item.createDate = formatExistingDateString(it)
-//            }
-//            item.finishTime?.let {
-//                item.finishTime = formatExistingDateString(it)
-//            }
-//
-//            UserStatus.getUserData()!!.let {
-//                item.updateName = it.displayName
-//                item.updateBy = it.workID
-//                putUpdateItem(item)
-//            }
-//        }
-//
-//    }
 
     private fun formatExistingDateString(dateString: String): String? {
         var formattedString: String? = null
@@ -285,7 +261,25 @@ class StockListViewModel : ViewModel() {
         }
     }
 
-    fun onOutOfStockComplete() {
+    fun onOutOfStockComplete(cancelled: Boolean) {
+        if (cancelled) {
+            _eventOutOfStock.value = false
+            return
+        }
+        coroutineScope.launch {
+            _updateApiStatus.value = ApiStatus.LOADING
+            try {
+                updateItemStatusForIndex(currentIndex.value!!, ItemStatus.NOTPICKED)
+                // check if update is successful and is last item
+                if (_updateApiStatus.value != ApiStatus.ERROR && !_isLastItem.value!!) {
+                    _currentIndex.value = _currentIndex.value!! + 1
+                    updateDataWithIndex(_currentIndex.value!!)
+                }
+            } catch (e: Exception) {
+                Log.d("onOutOfStockComplete", "onOutOfStockComplete error ${e.message}")
+                _updateApiStatus.value = ApiStatus.ERROR
+            }
+        }
         _eventOutOfStock.value = false
     }
 
@@ -331,6 +325,10 @@ class StockListViewModel : ViewModel() {
 
     fun onUpdateNetworkErrorComplete() {
         _updateApiStatus.value = ApiStatus.NONE
+    }
+
+    fun onDateFormatErrorComplete() {
+        _eventDateFormatError.value = null
     }
 
     override fun onCleared() {

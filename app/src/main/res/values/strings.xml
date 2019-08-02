@@ -41,6 +41,7 @@
     <string name="loading">读取中...</string>
     <string name="submitting">提交中...</string>
     <string name="date_formatting_error">日期格式错误</string>
+    <string name="ignore">忽略</string>
 
 
 </resources>

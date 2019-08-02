@@ -35,7 +35,7 @@ data class StockItem(val id: String?,
                      @Json(name = "matnr") val stockId: String?)
 
 
-enum class ItemState(val value: String) {
+enum class ItemStatus(val value: String) {
     NOTPICKED("0"),
     WORKING("1"),
     RESTOCK("2"),

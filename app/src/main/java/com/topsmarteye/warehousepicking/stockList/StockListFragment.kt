@@ -3,7 +3,6 @@ package com.topsmarteye.warehousepicking.stockList
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,7 +11,6 @@ import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
-import androidx.navigation.fragment.navArgs
 import com.topsmarteye.warehousepicking.OUT_OF_STOCK_DIALOG_REQUEST_CODE
 import com.topsmarteye.warehousepicking.R
 import com.topsmarteye.warehousepicking.RESET_ORDER_DIALOG_REQUEST_CODE
@@ -102,6 +100,13 @@ class StockListFragment : Fragment() {
                 ApiStatus.NONE -> return@Observer
             }
         })
+
+        stockListViewModel.eventDateFormatError.observe(this, Observer {
+            if (it != null) {
+                popDateFormatError()
+                stockListViewModel.onDateFormatErrorComplete()
+            }
+        })
     }
 
     private fun popRestock() {
@@ -131,13 +136,27 @@ class StockListFragment : Fragment() {
         startActivity(intent)
     }
 
+    private fun popDateFormatError() {
+        val intent = Intent(context, RetryDialogActivity::class.java).apply {
+            putExtra("dialogTitle", getString(R.string.date_formatting_error))
+            putExtra("buttonTitle", getString(R.string.ignore))
+        }
+        startActivity(intent)
+    }
+
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
         when (requestCode) {
             RESTOCK_DIALOG_REQUEST_CODE -> stockListViewModel.onRestockComplete()
-            OUT_OF_STOCK_DIALOG_REQUEST_CODE -> stockListViewModel.onOutOfStockComplete()
+            OUT_OF_STOCK_DIALOG_REQUEST_CODE -> {
+                if (resultCode == Activity.RESULT_OK) {
+                    stockListViewModel.onOutOfStockComplete(false)
+                } else {
+                    stockListViewModel.onOutOfStockComplete(true)
+                }
+            }
             RESET_ORDER_DIALOG_REQUEST_CODE -> stockListViewModel.onResetOrderComplete()
         }
 
