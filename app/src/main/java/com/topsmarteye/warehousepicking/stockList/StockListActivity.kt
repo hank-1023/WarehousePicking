@@ -3,9 +3,7 @@ package com.topsmarteye.warehousepicking.stockList
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.view.GestureDetector
 import android.view.KeyEvent
-import android.view.MotionEvent
 import android.view.View
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
@@ -16,6 +14,7 @@ import androidx.navigation.findNavController
 import com.topsmarteye.warehousepicking.R
 import com.topsmarteye.warehousepicking.databinding.ActivityStockListBinding
 import com.topsmarteye.warehousepicking.hideSystemUI
+import com.topsmarteye.warehousepicking.network.ApiStatus
 import com.topsmarteye.warehousepicking.network.UserStatus
 
 
@@ -24,8 +23,9 @@ class StockListActivity : AppCompatActivity() {
     private lateinit var binding: ActivityStockListBinding
     private lateinit var navController: NavController
     lateinit var stockListViewModel: StockListViewModel
-    private lateinit var gestureDetector: GestureDetector
+//    private lateinit var gestureDetector: GestureDetector
     private var isStart = true
+    private var isControlDisabled: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,7 +36,7 @@ class StockListActivity : AppCompatActivity() {
         stockListViewModel = ViewModelProviders.of(this).get(StockListViewModel::class.java)
         binding.stockListViewModel = stockListViewModel
 
-        gestureDetector = GestureDetector(this, FlingGestureListener())
+//        gestureDetector = GestureDetector(this, FlingGestureListener())
 
         setupListener()
 
@@ -52,7 +52,7 @@ class StockListActivity : AppCompatActivity() {
         if (isStart && keyCode == KeyEvent.KEYCODE_STAR) {
             stockListViewModel.onScan()
             return true
-        } else if (!isStart) {
+        } else if (!isStart && !isControlDisabled) {
             when (keyCode) {
                 KeyEvent.KEYCODE_1 -> {
                     stockListViewModel.onNext()
@@ -81,10 +81,10 @@ class StockListActivity : AppCompatActivity() {
         return super.onKeyDown(keyCode, event)
     }
 
-    override fun onTouchEvent(event: MotionEvent?): Boolean {
-        gestureDetector.onTouchEvent(event)
-        return super.onTouchEvent(event)
-    }
+//    override fun onTouchEvent(event: MotionEvent?): Boolean {
+//        gestureDetector.onTouchEvent(event)
+//        return super.onTouchEvent(event)
+//    }
 
     private fun setupListener() {
         navController.addOnDestinationChangedListener { _, destination, _ ->
@@ -98,6 +98,19 @@ class StockListActivity : AppCompatActivity() {
         stockListViewModel.currentIndex.observe(this, Observer {
             binding.currentIndexTextView.text =
                 resources.getString(R.string.current_index_format, it + 1, stockListViewModel.totalItems.value)
+        })
+
+        // Disable reset order button when loading
+        stockListViewModel.updateApiStatus.observe(this, Observer {
+            when (it) {
+                ApiStatus.LOADING -> binding.resetOrderButton.isEnabled = false
+                ApiStatus.NONE -> binding.resetOrderButton.isEnabled = true
+                else -> return@Observer
+            }
+        })
+
+        stockListViewModel.eventDisableControl.observe(this, Observer {
+            isControlDisabled = it
         })
 
         // Finish the activity if user is not logged in
@@ -130,17 +143,17 @@ class StockListActivity : AppCompatActivity() {
         }
     }
 
-    private inner class FlingGestureListener : GestureDetector.SimpleOnGestureListener() {
-        override fun onFling(e1: MotionEvent?, e2: MotionEvent?, velocityX: Float, velocityY: Float): Boolean {
-            if (isStart) {
-                stockListViewModel.onScan()
-                return true
-            } else {
-                return false
-            }
-        }
-
-    }
+//    private inner class FlingGestureListener : GestureDetector.SimpleOnGestureListener() {
+//        override fun onFling(e1: MotionEvent?, e2: MotionEvent?, velocityX: Float, velocityY: Float): Boolean {
+//            if (isStart) {
+//                stockListViewModel.onScan()
+//                return true
+//            } else {
+//                return false
+//            }
+//        }
+//
+//    }
 
 
 

@@ -119,10 +119,14 @@
                         android:id="@+id/nameTextView"
                         android:text="@{stockListViewModel.currentItem.name}"
                         tools:text="Dior"
-                        app:layout_constraintStart_toStartOf="@+id/nameLabel"
-                        app:layout_constraintEnd_toEndOf="@+id/nameLabel"
                         app:layout_constraintBaseline_toBaselineOf="@+id/IDTextView"
-                        style="@style/stock_list_item_textview_style"/>
+                        style="@style/stock_list_item_textview_style"
+                        android:layout_width="0dp"
+                        app:layout_constraintStart_toEndOf="@+id/IDTextView"
+                        android:layout_marginStart="16dp"
+                        app:layout_constraintEnd_toStartOf="@+id/quantityTextView"
+                        android:layout_marginEnd="16dp"
+                        android:focusable="true"/>
 
                 <TextView
                         android:id="@+id/quantityTextView"
@@ -270,10 +274,13 @@
                         android:id="@+id/nextItemNameTextView"
                         android:text="@{stockListViewModel.nextItem.name}"
                         tools:text="Dior"
-                        app:layout_constraintEnd_toEndOf="@+id/nextItemNameLabel"
-                        app:layout_constraintStart_toStartOf="@+id/nextItemNameLabel"
                         app:layout_constraintBaseline_toBaselineOf="@+id/nextItemIDTextView"
-                        style="@style/stock_list_item_textview_style"/>
+                        style="@style/stock_list_item_textview_style"
+                        app:layout_constraintEnd_toStartOf="@+id/nextItemQuantityTextView"
+                        android:layout_marginEnd="24dp"
+                        app:layout_constraintStart_toEndOf="@+id/nextItemIDTextView"
+                        android:layout_marginStart="24dp"
+                        android:layout_width="0dp"/>
 
                 <TextView
                         android:id="@+id/nextItemQuantityTextView"

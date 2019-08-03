@@ -43,6 +43,12 @@ class StockListFragment : Fragment() {
         return binding.root
     }
 
+    override fun onResume() {
+        super.onResume()
+        // Start marquee of textView when resume
+        binding.nameTextView.isSelected = true
+    }
+
     private fun setViewModelObserver() {
 
         stockListViewModel.isLastItem.observe(this, Observer { isLastItem ->
@@ -76,8 +82,9 @@ class StockListFragment : Fragment() {
         })
 
         stockListViewModel.currentIndex.observe(this, Observer {
-            // Whenever item changes, nextButton will have the focus
-            binding.nextButton.requestFocus()
+            // Whenever item changes, marquee for current item textView will start
+//            binding.nextButton.requestFocus()
+            binding.nameTextView.isSelected = true
         })
 
         stockListViewModel.eventFinishOrder.observe(this, Observer {
@@ -90,14 +97,25 @@ class StockListFragment : Fragment() {
 
         stockListViewModel.updateApiStatus.observe(this, Observer {
             when (it!!) {
-                ApiStatus.LOADING -> binding.submitGroup.visibility = View.VISIBLE
+                ApiStatus.LOADING -> {
+                    binding.submitGroup.visibility = View.VISIBLE
+                    stockListViewModel.onDisableControl()
+                }
                 ApiStatus.ERROR -> {
                     binding.submitGroup.visibility = View.GONE
                     popUpdateError()
-                    stockListViewModel.onUpdateNetworkErrorComplete()
+                    stockListViewModel.resetUpdateNetworkStatus()
                 }
                 ApiStatus.DONE -> binding.submitGroup.visibility = View.GONE
-                ApiStatus.NONE -> return@Observer
+                ApiStatus.NONE -> stockListViewModel.onDisableControlComplete()
+            }
+        })
+
+        stockListViewModel.eventDisableControl.observe(this, Observer {
+            if (it) {
+                disableControlButtons()
+            } else {
+                enableControlButtons()
             }
         })
 
@@ -107,6 +125,20 @@ class StockListFragment : Fragment() {
                 stockListViewModel.onDateFormatErrorComplete()
             }
         })
+    }
+
+    private fun disableControlButtons() {
+        binding.nextButton.isEnabled = false
+        binding.needsRestockingButton.isEnabled = false
+        binding.outOfStockButton.isEnabled = false
+        binding.finishOrderButton.isEnabled = false
+    }
+
+    private fun enableControlButtons() {
+        binding.nextButton.isEnabled = true
+        binding.needsRestockingButton.isEnabled = true
+        binding.outOfStockButton.isEnabled = true
+        binding.finishOrderButton.isEnabled = true
     }
 
     private fun popRestock() {
@@ -152,9 +184,9 @@ class StockListFragment : Fragment() {
             RESTOCK_DIALOG_REQUEST_CODE -> stockListViewModel.onRestockComplete()
             OUT_OF_STOCK_DIALOG_REQUEST_CODE -> {
                 if (resultCode == Activity.RESULT_OK) {
-                    stockListViewModel.onOutOfStockComplete(false)
+                    stockListViewModel.onOutOfStockComplete()
                 } else {
-                    stockListViewModel.onOutOfStockComplete(true)
+                    stockListViewModel.onOutOfStockCancelledComplete()
                 }
             }
             RESET_ORDER_DIALOG_REQUEST_CODE -> stockListViewModel.onResetOrderComplete()

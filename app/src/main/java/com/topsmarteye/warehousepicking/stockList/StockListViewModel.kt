@@ -80,6 +80,10 @@ class StockListViewModel : ViewModel() {
     val eventDateFormatError: LiveData<Exception>
         get() = _eventDateFormatError
 
+    private val _eventDisableControl = MutableLiveData<Boolean>()
+    val eventDisableControl: LiveData<Boolean>
+        get() = _eventDisableControl
+
     private var viewModelJob = Job()
     private val coroutineScope = CoroutineScope(viewModelJob + Dispatchers.Main)
 
@@ -135,26 +139,20 @@ class StockListViewModel : ViewModel() {
         _currentIndex.value = 0
         _isLastItem.value = false
         // update currentItem and nextItem
-        updateDataWithIndex(0)
+        updateLiveDataWithIndex(0)
     }
 
-    // Increase currentIndex by 1 and call updateDataWithIndex
+    // Called by xml to trigger action
+    // onNext() -> updateItemStatusForIndex(), put relevant data in -> putUpdateItem()
+    // Doesn't check for indexing since nextButton should disappear on last item
     fun onNext() {
         coroutineScope.launch {
-            _updateApiStatus.value = ApiStatus.LOADING
-
-            try {
-                updateItemStatusForIndex(currentIndex.value!!, ItemStatus.NOTPICKED)
-                // check if update is successful
-                if (_updateApiStatus.value != ApiStatus.ERROR) {
-                    _currentIndex.value = _currentIndex.value!! + 1
-                    updateDataWithIndex(_currentIndex.value!!)
-                }
-            } catch (e: Exception) {
-                Log.d("onNext", "onNext error ${e.message}")
-                _updateApiStatus.value = ApiStatus.ERROR
+            updateItemStatusForIndex(currentIndex.value!!, ItemStatus.NOTPICKED)
+            // check if update is successful, if true, update view LiveData
+            if (_updateApiStatus.value != ApiStatus.ERROR) {
+                _currentIndex.value = _currentIndex.value!! + 1
+                updateLiveDataWithIndex(_currentIndex.value!!)
             }
-
         }
     }
 
@@ -175,27 +173,36 @@ class StockListViewModel : ViewModel() {
                 item.updateBy = it.workID
                 putUpdateItem(item)
             }
-
         }
     }
 
     // Usually not to be called directly
+    // Can be called when network request on updating item is required
     private suspend fun putUpdateItem(item: StockItem) {
-        var response = LoginApi.retrofitService.updateOrderItem(LoginApi.authToken!!, item.stockId!!, item)
-        if (!response.isSuccessful) {
-            if (LoginApi.updateAuthToken()) {
-                response = LoginApi.retrofitService.updateOrderItem(LoginApi.authToken!!, item.stockId, item)
+        _updateApiStatus.value = ApiStatus.LOADING
+        try {
+            var response = LoginApi.retrofitService.updateOrderItem(LoginApi.authToken!!, item.stockId!!, item)
+            if (!response.isSuccessful) {
+                if (LoginApi.updateAuthToken()) {
+                    response = LoginApi.retrofitService.updateOrderItem(LoginApi.authToken!!, item.stockId, item)
+                } else {
+                    _updateApiStatus.value = ApiStatus.ERROR
+                    return
+                }
+            }
+
+            if (response.isSuccessful) {
+                _updateApiStatus.value = ApiStatus.DONE
             } else {
                 _updateApiStatus.value = ApiStatus.ERROR
-                return
+                Log.d("StockListViewModel", "putUpdate Item error ${response.message()}")
             }
-        }
-
-        if (response.isSuccessful) {
-            _updateApiStatus.value = ApiStatus.DONE
-        } else {
+        } catch (e: Exception) {
+            Log.d("StockListViewModel", "putUpdate Item exception ${e.message}")
             _updateApiStatus.value = ApiStatus.ERROR
-            Log.d("StockListViewModel", "putUpdate Item error ${response.message()}")
+        } finally {
+            // reset status to NONE, will enable action buttons
+            resetUpdateNetworkStatus()
         }
     }
 
@@ -227,7 +234,7 @@ class StockListViewModel : ViewModel() {
     }
 
     // Update the mutable live data with the index passed in
-    private fun updateDataWithIndex(index: Int) {
+    private fun updateLiveDataWithIndex(index: Int) {
         itemList!!.let {
             _currentItem.value = it[index]
 
@@ -261,25 +268,19 @@ class StockListViewModel : ViewModel() {
         }
     }
 
-    fun onOutOfStockComplete(cancelled: Boolean) {
-        if (cancelled) {
-            _eventOutOfStock.value = false
-            return
-        }
+    fun onOutOfStockComplete() {
         coroutineScope.launch {
-            _updateApiStatus.value = ApiStatus.LOADING
-            try {
-                updateItemStatusForIndex(currentIndex.value!!, ItemStatus.NOTPICKED)
-                // check if update is successful and is last item
-                if (_updateApiStatus.value != ApiStatus.ERROR && !_isLastItem.value!!) {
-                    _currentIndex.value = _currentIndex.value!! + 1
-                    updateDataWithIndex(_currentIndex.value!!)
-                }
-            } catch (e: Exception) {
-                Log.d("onOutOfStockComplete", "onOutOfStockComplete error ${e.message}")
-                _updateApiStatus.value = ApiStatus.ERROR
+            updateItemStatusForIndex(currentIndex.value!!, ItemStatus.NOTPICKED)
+            // check if update is successful and is last item
+            if (_updateApiStatus.value != ApiStatus.ERROR && !_isLastItem.value!!) {
+                _currentIndex.value = _currentIndex.value!! + 1
+                updateLiveDataWithIndex(_currentIndex.value!!)
             }
         }
+        _eventOutOfStock.value = false
+    }
+
+    fun onOutOfStockCancelledComplete() {
         _eventOutOfStock.value = false
     }
 
@@ -323,7 +324,15 @@ class StockListViewModel : ViewModel() {
         _loadApiStatus.value = ApiStatus.NONE
     }
 
-    fun onUpdateNetworkErrorComplete() {
+    fun onDisableControl() {
+        _eventDisableControl.value = true
+    }
+
+    fun onDisableControlComplete() {
+        _eventDisableControl.value = false
+    }
+
+    fun resetUpdateNetworkStatus() {
         _updateApiStatus.value = ApiStatus.NONE
     }
 
