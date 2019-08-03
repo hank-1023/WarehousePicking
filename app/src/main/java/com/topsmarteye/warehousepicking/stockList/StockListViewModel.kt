@@ -84,6 +84,10 @@ class StockListViewModel : ViewModel() {
     val eventDisableControl: LiveData<Boolean>
         get() = _eventDisableControl
 
+    private val _eventFinishActivity = MutableLiveData<Boolean>()
+    val eventFinishActivity: LiveData<Boolean>
+        get() = _eventFinishActivity
+
     private var viewModelJob = Job()
     private val coroutineScope = CoroutineScope(viewModelJob + Dispatchers.Main)
 
@@ -128,8 +132,6 @@ class StockListViewModel : ViewModel() {
                 Log.d("loadStockList", "Load stock list network error ${e.message}")
                 _loadApiStatus.value = ApiStatus.ERROR
             }
-
-
         }
     }
 
@@ -153,6 +155,7 @@ class StockListViewModel : ViewModel() {
                 _currentIndex.value = _currentIndex.value!! + 1
                 updateLiveDataWithIndex(_currentIndex.value!!)
             }
+            _updateApiStatus.value = ApiStatus.NONE
         }
     }
 
@@ -200,9 +203,6 @@ class StockListViewModel : ViewModel() {
         } catch (e: Exception) {
             Log.d("StockListViewModel", "putUpdate Item exception ${e.message}")
             _updateApiStatus.value = ApiStatus.ERROR
-        } finally {
-            // reset status to NONE, will enable action buttons
-            resetUpdateNetworkStatus()
         }
     }
 
@@ -257,6 +257,7 @@ class StockListViewModel : ViewModel() {
 
     fun onRestockComplete() {
         _eventRestock.value = false
+        _updateApiStatus.value = ApiStatus.NONE
     }
 
     fun onOutOfStock() {
@@ -268,20 +269,24 @@ class StockListViewModel : ViewModel() {
         }
     }
 
-    fun onOutOfStockComplete() {
+    fun onOutOfStockComplete(cancelled: Boolean) {
         coroutineScope.launch {
-            updateItemStatusForIndex(currentIndex.value!!, ItemStatus.NOTPICKED)
-            // check if update is successful and is last item
-            if (_updateApiStatus.value != ApiStatus.ERROR && !_isLastItem.value!!) {
-                _currentIndex.value = _currentIndex.value!! + 1
-                updateLiveDataWithIndex(_currentIndex.value!!)
+            if (!cancelled) {
+                updateItemStatusForIndex(currentIndex.value!!, ItemStatus.NOTPICKED)
+                // check if update is successful and is last item
+                if (_updateApiStatus.value != ApiStatus.ERROR) {
+                    if (isLastItem.value!!) {
+                        // Finish the activity if is last item
+                        _eventFinishActivity.value = true
+                    } else {
+                        _currentIndex.value = _currentIndex.value!! + 1
+                        updateLiveDataWithIndex(_currentIndex.value!!)
+                    }
+                }
             }
+            _eventOutOfStock.value = false
+            _updateApiStatus.value = ApiStatus.NONE
         }
-        _eventOutOfStock.value = false
-    }
-
-    fun onOutOfStockCancelledComplete() {
-        _eventOutOfStock.value = false
     }
 
     fun onResetOrder() {
@@ -293,6 +298,7 @@ class StockListViewModel : ViewModel() {
 
     fun onResetOrderComplete() {
         _eventResetOrder.value = false
+        _updateApiStatus.value = ApiStatus.NONE
     }
 
     fun onFinishOrder() {
@@ -300,7 +306,20 @@ class StockListViewModel : ViewModel() {
     }
 
     fun onFinishOrderComplete() {
-        _eventFinishOrder.value = false
+        coroutineScope.launch {
+            updateItemStatusForIndex(currentIndex.value!!, ItemStatus.NOTPICKED)
+            // check if update is successful, if true, finish the activity
+            if (_updateApiStatus.value != ApiStatus.ERROR) {
+                // this will trigger the finish of activity
+                _eventFinishActivity.value = true
+            }
+            _eventFinishOrder.value = false
+            _updateApiStatus.value = ApiStatus.NONE
+        }
+    }
+
+    fun onFinishActivityComplete() {
+        _eventFinishActivity.value = false
     }
 
     fun onScan() {
@@ -330,10 +349,6 @@ class StockListViewModel : ViewModel() {
 
     fun onDisableControlComplete() {
         _eventDisableControl.value = false
-    }
-
-    fun resetUpdateNetworkStatus() {
-        _updateApiStatus.value = ApiStatus.NONE
     }
 
     fun onDateFormatErrorComplete() {

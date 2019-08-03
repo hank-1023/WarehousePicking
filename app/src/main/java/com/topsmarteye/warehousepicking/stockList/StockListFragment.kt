@@ -88,9 +88,17 @@ class StockListFragment : Fragment() {
         })
 
         stockListViewModel.eventFinishOrder.observe(this, Observer {
-            if (it && binding.finishOrderButton.visibility == View.VISIBLE) {
-                binding.finishOrderButton.requestFocus()
+            if (it) {
+                if (binding.finishOrderButton.visibility == View.VISIBLE) {
+                    binding.finishOrderButton.requestFocus()
+                }
                 stockListViewModel.onFinishOrderComplete()
+            }
+        })
+
+        stockListViewModel.eventFinishActivity.observe(this, Observer {
+            if (it) {
+                stockListViewModel.onFinishActivityComplete()
                 activity?.finish()
             }
         })
@@ -104,9 +112,10 @@ class StockListFragment : Fragment() {
                 ApiStatus.ERROR -> {
                     binding.submitGroup.visibility = View.GONE
                     popUpdateError()
-                    stockListViewModel.resetUpdateNetworkStatus()
                 }
-                ApiStatus.DONE -> binding.submitGroup.visibility = View.GONE
+                ApiStatus.DONE -> {
+                    binding.submitGroup.visibility = View.GONE
+                }
                 ApiStatus.NONE -> stockListViewModel.onDisableControlComplete()
             }
         })
@@ -184,9 +193,9 @@ class StockListFragment : Fragment() {
             RESTOCK_DIALOG_REQUEST_CODE -> stockListViewModel.onRestockComplete()
             OUT_OF_STOCK_DIALOG_REQUEST_CODE -> {
                 if (resultCode == Activity.RESULT_OK) {
-                    stockListViewModel.onOutOfStockComplete()
+                    stockListViewModel.onOutOfStockComplete(false)
                 } else {
-                    stockListViewModel.onOutOfStockCancelledComplete()
+                    stockListViewModel.onOutOfStockComplete(true)
                 }
             }
             RESET_ORDER_DIALOG_REQUEST_CODE -> stockListViewModel.onResetOrderComplete()
