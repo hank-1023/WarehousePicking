@@ -4,7 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.topsmarteye.warehousepicking.network.ApiStatus
-import com.topsmarteye.warehousepicking.network.LoginApi
+import com.topsmarteye.warehousepicking.network.networkServices.LoginService
 import kotlinx.coroutines.*
 
 
@@ -30,10 +30,10 @@ class TaskSelectionViewModel : ViewModel() {
     fun getTokenAndLogin(username: String, password: Int) {
         _apiStatus.value = ApiStatus.LOADING
         coroutineScope.launch {
-            val tokenResultSuccessful = LoginApi.updateAuthToken()
+            val tokenResultSuccessful = LoginService.updateAuthToken()
             //check if token is got and check if successfully got userdata
-            if (tokenResultSuccessful && LoginApi.loginUser(username, password)) {
-                val userData = LoginApi.getUserData()
+            if (tokenResultSuccessful && LoginService.loginUser(username, password)) {
+                val userData = LoginService.getUserData()
                 _displayName.value = userData!!.displayName
                 _apiStatus.value = ApiStatus.DONE
             } else {
@@ -43,7 +43,7 @@ class TaskSelectionViewModel : ViewModel() {
     }
 
     fun onLogOut() {
-        LoginApi.logOut()
+        LoginService.logOut()
         _displayName.value = null
     }
 

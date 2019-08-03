@@ -15,8 +15,8 @@ import com.topsmarteye.warehousepicking.R
 import com.topsmarteye.warehousepicking.databinding.ActivityStockListBinding
 import com.topsmarteye.warehousepicking.hideSystemUI
 import com.topsmarteye.warehousepicking.network.ApiStatus
-import com.topsmarteye.warehousepicking.network.LoginApi
-import com.topsmarteye.warehousepicking.network.UpdateItemApi
+import com.topsmarteye.warehousepicking.network.networkServices.LoginService
+import com.topsmarteye.warehousepicking.network.networkServices.UpdateItemService
 
 
 class StockListActivity : AppCompatActivity() {
@@ -106,7 +106,7 @@ class StockListActivity : AppCompatActivity() {
         })
 
         // Disable reset order button when loading
-        UpdateItemApi.updateApiStatus.observe(this, Observer {
+        UpdateItemService.updateApiStatus.observe(this, Observer {
             when (it) {
                 ApiStatus.LOADING -> binding.resetOrderButton.isEnabled = false
                 ApiStatus.NONE -> binding.resetOrderButton.isEnabled = true
@@ -115,7 +115,7 @@ class StockListActivity : AppCompatActivity() {
         })
 
         // Finish the activity if user is not logged in
-        LoginApi.isLoggedIn.observe(this, Observer {
+        LoginService.isLoggedIn.observe(this, Observer {
             if (!it) {
                 finish()
             }

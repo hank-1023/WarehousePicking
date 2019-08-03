@@ -1,11 +1,13 @@
-package com.topsmarteye.warehousepicking.network
+package com.topsmarteye.warehousepicking.network.networkServices
 
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import com.topsmarteye.warehousepicking.network.GlobalApi
+import com.topsmarteye.warehousepicking.network.UserData
 import java.lang.Exception
 
-object LoginApi {
+object LoginService {
     var authToken: String? = null
 
     private var userData: UserData? = null
@@ -27,10 +29,10 @@ object LoginApi {
                     return true
                 }
             } else {
-                Log.d("LoginApi", "Update auth token response unsuccessful")
+                Log.d("LoginService", "Update auth token response unsuccessful")
             }
         } catch (e: Exception) {
-            Log.d("LoginApi", "Update auth token failed ${e.message}")
+            Log.d("LoginService", "Update auth token failed ${e.message}")
         }
 
         return false
@@ -44,10 +46,10 @@ object LoginApi {
                 loggedIn.value = true
                 return true
             } else {
-                Log.d("UserStatus", "login user unsuccessful ${response.message()}")
+                Log.d("LoginService", "login user unsuccessful ${response.message()}")
             }
         } catch (e: Exception) {
-            Log.d("UserStatus", "login user exception ${e.message}")
+            Log.d("LoginService", "login user exception ${e.message}")
         }
 
         return false

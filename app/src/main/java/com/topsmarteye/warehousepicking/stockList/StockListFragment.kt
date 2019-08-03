@@ -20,7 +20,7 @@ import com.topsmarteye.warehousepicking.dialog.YesNoDialogActivity
 import com.topsmarteye.warehousepicking.databinding.FragmentStockListBinding
 import com.topsmarteye.warehousepicking.dialog.RetryDialogActivity
 import com.topsmarteye.warehousepicking.network.ApiStatus
-import com.topsmarteye.warehousepicking.network.UpdateItemApi
+import com.topsmarteye.warehousepicking.network.networkServices.UpdateItemService
 
 class StockListFragment : Fragment() {
 
@@ -119,7 +119,7 @@ class StockListFragment : Fragment() {
             }
         })
 
-        UpdateItemApi.updateApiStatus.observe(this, Observer {
+        UpdateItemService.updateApiStatus.observe(this, Observer {
             when (it!!) {
                 ApiStatus.LOADING -> {
                     binding.submitGroup.visibility = View.VISIBLE

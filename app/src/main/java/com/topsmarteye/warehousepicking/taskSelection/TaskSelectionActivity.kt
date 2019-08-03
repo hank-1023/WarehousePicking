@@ -18,7 +18,7 @@ import com.topsmarteye.warehousepicking.databinding.ActivityTaskSelectionBinding
 import com.topsmarteye.warehousepicking.dialog.RetryDialogActivity
 import com.topsmarteye.warehousepicking.hideSystemUI
 import com.topsmarteye.warehousepicking.network.ApiStatus
-import com.topsmarteye.warehousepicking.network.LoginApi
+import com.topsmarteye.warehousepicking.network.networkServices.LoginService
 import java.lang.Exception
 
 class TaskSelectionActivity : AppCompatActivity() {
@@ -106,7 +106,7 @@ class TaskSelectionActivity : AppCompatActivity() {
         })
 
 
-        LoginApi.isLoggedIn.observe(this, Observer {
+        LoginService.isLoggedIn.observe(this, Observer {
             if (!it) {
                 integrator.initiateScan()
             }

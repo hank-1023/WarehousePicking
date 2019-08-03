@@ -1,13 +1,17 @@
-package com.topsmarteye.warehousepicking.network
+package com.topsmarteye.warehousepicking.network.networkServices
 
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.topsmarteye.warehousepicking.formatToStandardDateString
 import com.topsmarteye.warehousepicking.getCurrentTimeString
+import com.topsmarteye.warehousepicking.network.ApiStatus
+import com.topsmarteye.warehousepicking.network.GlobalApi
+import com.topsmarteye.warehousepicking.network.ItemStatus
+import com.topsmarteye.warehousepicking.network.StockItem
 import java.lang.Exception
 
-object UpdateItemApi {
+object UpdateItemService {
 
     private val mutableUpdateApiStatus = MutableLiveData<ApiStatus>()
     val updateApiStatus: LiveData<ApiStatus>
@@ -30,10 +34,11 @@ object UpdateItemApi {
             item.createDate = it.formatToStandardDateString()
         }
 
-        LoginApi.getUserData()!!.let {
+        LoginService.getUserData()!!.let {
             item.updateName = it.displayName
             item.updateBy = it.workID
-            mutableUpdateApiStatus.value = ApiStatus.LOADING
+            mutableUpdateApiStatus.value =
+                ApiStatus.LOADING
             // Put item
             putItem(item)
         }
@@ -43,31 +48,37 @@ object UpdateItemApi {
     suspend fun putItem(item: StockItem) {
         try {
             var response = GlobalApi.retrofitService
-                .updateOrderItem(LoginApi.authToken!!, item.stockId!!, item)
+                .updateOrderItem(LoginService.authToken!!, item.stockId!!, item)
             if (!response.isSuccessful) {
-                if (LoginApi.updateAuthToken()) {
+                if (LoginService.updateAuthToken()) {
                     response = GlobalApi.retrofitService
-                        .updateOrderItem(LoginApi.authToken!!, item.stockId, item)
+                        .updateOrderItem(LoginService.authToken!!, item.stockId, item)
                 } else {
-                    mutableUpdateApiStatus.value =  ApiStatus.ERROR
+                    mutableUpdateApiStatus.value =
+                        ApiStatus.ERROR
                     return
                 }
             }
 
             if (response.isSuccessful) {
-                mutableUpdateApiStatus.value = ApiStatus.DONE
+                mutableUpdateApiStatus.value =
+                    ApiStatus.DONE
             } else {
-                mutableUpdateApiStatus.value = ApiStatus.ERROR
-                Log.d("UpdateItemApi", "putItem error: ${response.message()}")
+                mutableUpdateApiStatus.value =
+                    ApiStatus.ERROR
+                Log.d("UpdateItemService", "putItem error: ${response.message()}")
             }
         } catch (e: Exception) {
-            Log.d("UpdateItemApi", "putItem exception: ${e.message}")
-            mutableUpdateApiStatus.value = ApiStatus.ERROR
+            Log.d("UpdateItemService", "putItem exception: ${e.message}")
+            mutableUpdateApiStatus.value =
+                ApiStatus.ERROR
         }
     }
 
+    // Should reset the status when error/done event has been handled
     fun resetUpdateApiStatus() {
-        mutableUpdateApiStatus.value = ApiStatus.NONE
+        mutableUpdateApiStatus.value =
+            ApiStatus.NONE
     }
 
     fun checkNoError(): Boolean {
