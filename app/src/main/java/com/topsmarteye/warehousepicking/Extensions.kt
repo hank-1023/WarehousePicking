@@ -1,8 +1,14 @@
 package com.topsmarteye.warehousepicking
 
+import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import org.joda.time.DateTime
+import org.joda.time.DateTimeZone
+import org.joda.time.format.DateTimeFormat
+import java.lang.Exception
+import java.util.*
 
 fun AppCompatActivity.hideSystemUI() {
     window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
@@ -14,6 +20,36 @@ fun AppCompatActivity.hideSystemUI() {
             // Hide the nav bar and status bar
             or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
             or View.SYSTEM_UI_FLAG_FULLSCREEN)
+}
+
+fun String.formatToStandardDateString(): String? {
+    var formattedString: String? = null
+
+    val fmtWithSeconds = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss")
+        .withLocale(Locale.CHINA)
+    val fmtNoSecond = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm")
+        .withLocale(Locale.CHINA)
+
+    try {
+        val dt = fmtWithSeconds.parseDateTime(this)
+            .withZone(DateTimeZone.forID("Asia/Shanghai"))
+        formattedString = dt.toString()
+    } catch (e: Exception) {
+        try {
+            val dt = fmtNoSecond.parseDateTime(this)
+                .withZone(DateTimeZone.forID("Asia/Shanghai"))
+            formattedString = dt.toString()
+        } catch (e: Exception) {
+            Log.d("formatDateString", "Unknown date format ${e.message}")
+        }
+    } finally {
+        return formattedString
+    }
+}
+
+fun getCurrentTimeString(): String {
+    val dt = DateTime()
+    return dt.toString()
 }
 
 

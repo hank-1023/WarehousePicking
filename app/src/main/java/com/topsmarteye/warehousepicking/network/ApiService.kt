@@ -27,7 +27,7 @@ private val retrofit = Retrofit.Builder()
 
 enum class ApiStatus { LOADING, ERROR, DONE, NONE }
 
-interface LoginApiService {
+interface ApiService {
     @POST("tokens")
     suspend fun getLoginToken(@Query("username") username: String,
                               @Query("password") password: Int): Response<String>
@@ -48,73 +48,8 @@ interface LoginApiService {
                                 @Body item: StockItem): Response<Void>
 }
 
-object LoginApi {
-    val retrofitService: LoginApiService by lazy {
-        retrofit.create(LoginApiService::class.java)
-    }
-
-    var authToken: String? = null
-
-
-    suspend fun updateAuthToken(): Boolean {
-        try {
-            val tokenResponse
-                    = retrofitService.getLoginToken("testRest", 123456)
-            if (tokenResponse.isSuccessful) {
-                authToken = tokenResponse.body()
-                if (!authToken.isNullOrEmpty()) {
-                    return true
-                }
-            } else {
-                Log.d("LoginApi", "Update auth token response unsuccessful")
-            }
-        } catch (e: Exception) {
-            Log.d("LoginApi", "Update auth token failed ${e.message}")
-        }
-
-        return false
-    }
-
-}
-
-object UserStatus {
-    private var userData: UserData? = null
-    private val loggedIn = MutableLiveData<Boolean>()
-    val isLoggedIn: LiveData<Boolean>
-        get() = loggedIn
-
-    init {
-        loggedIn.value = false
-    }
-
-    suspend fun loginUser(username: String, password: Int): Boolean {
-        try {
-            val response = LoginApi.retrofitService.login(LoginApi.authToken!!, username, password)
-            if (response.isSuccessful && response.body() != null) {
-                userData = response.body()!!.userData
-                loggedIn.value = true
-                return true
-            } else {
-                Log.d("UserStatus", "login user unsuccessful ${response.message()}")
-            }
-        } catch (e: Exception) {
-            Log.d("UserStatus", "login user exception ${e.message}")
-        }
-
-        return false
-    }
-
-    fun getUserData(): UserData? {
-        return if (loggedIn.value!!) {
-            // Will crash the app if tried to get userdata when not isLoggedIn
-            userData!!
-        } else {
-            null
-        }
-    }
-
-    fun logOut() {
-        userData = null
-        loggedIn.value = false
+object GlobalApi {
+    val retrofitService: ApiService by lazy {
+        retrofit.create(ApiService::class.java)
     }
 }

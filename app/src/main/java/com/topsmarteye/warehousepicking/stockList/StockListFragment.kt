@@ -20,6 +20,7 @@ import com.topsmarteye.warehousepicking.dialog.YesNoDialogActivity
 import com.topsmarteye.warehousepicking.databinding.FragmentStockListBinding
 import com.topsmarteye.warehousepicking.dialog.RetryDialogActivity
 import com.topsmarteye.warehousepicking.network.ApiStatus
+import com.topsmarteye.warehousepicking.network.UpdateItemApi
 
 class StockListFragment : Fragment() {
 
@@ -103,7 +104,22 @@ class StockListFragment : Fragment() {
             }
         })
 
-        stockListViewModel.updateApiStatus.observe(this, Observer {
+        stockListViewModel.eventDisableControl.observe(this, Observer {
+            if (it) {
+                disableControlButtons()
+            } else {
+                enableControlButtons()
+            }
+        })
+
+        stockListViewModel.eventDateFormatError.observe(this, Observer {
+            if (it != null) {
+                popDateFormatError()
+                stockListViewModel.onDateFormatErrorComplete()
+            }
+        })
+
+        UpdateItemApi.updateApiStatus.observe(this, Observer {
             when (it!!) {
                 ApiStatus.LOADING -> {
                     binding.submitGroup.visibility = View.VISIBLE
@@ -117,21 +133,6 @@ class StockListFragment : Fragment() {
                     binding.submitGroup.visibility = View.GONE
                 }
                 ApiStatus.NONE -> stockListViewModel.onDisableControlComplete()
-            }
-        })
-
-        stockListViewModel.eventDisableControl.observe(this, Observer {
-            if (it) {
-                disableControlButtons()
-            } else {
-                enableControlButtons()
-            }
-        })
-
-        stockListViewModel.eventDateFormatError.observe(this, Observer {
-            if (it != null) {
-                popDateFormatError()
-                stockListViewModel.onDateFormatErrorComplete()
             }
         })
     }

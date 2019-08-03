@@ -6,20 +6,30 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.topsmarteye.warehousepicking.network.*
 import kotlinx.coroutines.*
-import org.joda.time.DateTime
-import org.joda.time.DateTimeZone
-import org.joda.time.format.DateTimeFormat
 import java.lang.Exception
-import java.util.*
 
 
 class StockListViewModel : ViewModel() {
+
+    //region Variables for InputAndScanFragment
+
+    private val _eventScan = MutableLiveData<Boolean>()
+    val eventScan: LiveData<Boolean>
+        get() = _eventScan
+
+    private val _loadApiStatus = MutableLiveData<ApiStatus>()
+    val loadApiStatus: LiveData<ApiStatus>
+        get() = _loadApiStatus
+
+    private val _eventNavigateToList = MutableLiveData<Boolean>()
+    val eventNavigateToList: LiveData<Boolean>
+        get() = _eventNavigateToList
+    //endregion
 
     // The live data of order number
     private val _orderNumber = MutableLiveData<String>()
     val orderNumber: LiveData<String>
         get() = _orderNumber
-
 
     // The live data field of stock item list
     private var itemList: List<StockItem>? = null
@@ -60,22 +70,6 @@ class StockListViewModel : ViewModel() {
     val eventFinishOrder: LiveData<Boolean>
         get() = _eventFinishOrder
 
-    private val _eventScan = MutableLiveData<Boolean>()
-    val eventScan: LiveData<Boolean>
-        get() = _eventScan
-
-    private val _loadApiStatus = MutableLiveData<ApiStatus>()
-    val loadApiStatus: LiveData<ApiStatus>
-        get() = _loadApiStatus
-
-    private val _updateApiStatus = MutableLiveData<ApiStatus>()
-    val updateApiStatus: LiveData<ApiStatus>
-        get() = _updateApiStatus
-
-    private val _eventNavigateToList = MutableLiveData<Boolean>()
-    val eventNavigateToList: LiveData<Boolean>
-        get() = _eventNavigateToList
-
     private val _eventDateFormatError = MutableLiveData<Exception>()
     val eventDateFormatError: LiveData<Exception>
         get() = _eventDateFormatError
@@ -101,16 +95,20 @@ class StockListViewModel : ViewModel() {
         _isLastItem.value = false
     }
 
+    //region Logic for InputAndScanFragment
+
     fun loadStockList(orderNumber: String) {
         coroutineScope.launch {
             _loadApiStatus.value = ApiStatus.LOADING
 
             try {
-                var response = LoginApi.retrofitService.getOrderItems(LoginApi.authToken!!, orderNumber, 0)
+                var response = GlobalApi.retrofitService
+                    .getOrderItems(LoginApi.authToken!!, orderNumber, 0)
                 if (!response.isSuccessful) {
                     //update auth token if out-of-date
                     if (LoginApi.updateAuthToken()) {
-                        response = LoginApi.retrofitService.getOrderItems(LoginApi.authToken!!, orderNumber, 0)
+                        response = GlobalApi.retrofitService
+                            .getOrderItems(LoginApi.authToken!!, orderNumber, 0)
                     } else {
                         _loadApiStatus.value = ApiStatus.ERROR
                         return@launch
@@ -135,6 +133,31 @@ class StockListViewModel : ViewModel() {
         }
     }
 
+    fun onScan() {
+        _eventScan.value = true
+    }
+
+    fun onScanComplete() {
+        _eventScan.value = false
+    }
+
+    fun onNavigationToList() {
+        _eventNavigateToList.value = true
+    }
+
+    fun onNavigationToListComplete() {
+        _eventNavigateToList.value = false
+        _loadApiStatus.value = ApiStatus.NONE
+    }
+
+    fun onInputNetworkErrorComplete() {
+        _loadApiStatus.value = ApiStatus.NONE
+    }
+
+    //endregion
+
+    //region Logic for StockListFragment
+
     private fun onListLoaded() {
         // Reset viewModel Properties
         _totalItems.value = itemList!!.size
@@ -142,95 +165,6 @@ class StockListViewModel : ViewModel() {
         _isLastItem.value = false
         // update currentItem and nextItem
         updateLiveDataWithIndex(0)
-    }
-
-    // Called by xml to trigger action
-    // onNext() -> updateItemStatusForIndex(), put relevant data in -> putUpdateItem()
-    // Doesn't check for indexing since nextButton should disappear on last item
-    fun onNext() {
-        coroutineScope.launch {
-            updateItemStatusForIndex(currentIndex.value!!, ItemStatus.NOTPICKED)
-            // check if update is successful, if true, update view LiveData
-            if (_updateApiStatus.value != ApiStatus.ERROR) {
-                _currentIndex.value = _currentIndex.value!! + 1
-                updateLiveDataWithIndex(_currentIndex.value!!)
-            }
-            _updateApiStatus.value = ApiStatus.NONE
-        }
-    }
-
-    private suspend fun updateItemStatusForIndex(index: Int, status: ItemStatus) {
-
-        itemList!![index].let { item ->
-            item.updateDate = getCurrentTimeString()
-            // item finished
-            item.finishTime = getCurrentTimeString()
-            item.status = status.value
-
-            item.createDate?.let {
-                item.createDate = formatExistingDateString(it)
-            }
-
-            UserStatus.getUserData()!!.let {
-                item.updateName = it.displayName
-                item.updateBy = it.workID
-                putUpdateItem(item)
-            }
-        }
-    }
-
-    // Usually not to be called directly
-    // Can be called when network request on updating item is required
-    private suspend fun putUpdateItem(item: StockItem) {
-        _updateApiStatus.value = ApiStatus.LOADING
-        try {
-            var response = LoginApi.retrofitService.updateOrderItem(LoginApi.authToken!!, item.stockId!!, item)
-            if (!response.isSuccessful) {
-                if (LoginApi.updateAuthToken()) {
-                    response = LoginApi.retrofitService.updateOrderItem(LoginApi.authToken!!, item.stockId, item)
-                } else {
-                    _updateApiStatus.value = ApiStatus.ERROR
-                    return
-                }
-            }
-
-            if (response.isSuccessful) {
-                _updateApiStatus.value = ApiStatus.DONE
-            } else {
-                _updateApiStatus.value = ApiStatus.ERROR
-                Log.d("StockListViewModel", "putUpdate Item error ${response.message()}")
-            }
-        } catch (e: Exception) {
-            Log.d("StockListViewModel", "putUpdate Item exception ${e.message}")
-            _updateApiStatus.value = ApiStatus.ERROR
-        }
-    }
-
-
-    private fun formatExistingDateString(dateString: String): String? {
-        var formattedString: String? = null
-
-        val fmtWithSeconds = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss").withLocale(Locale.CHINA)
-        val fmtNoSecond = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm").withLocale(Locale.CHINA)
-
-        try {
-            val dt = fmtWithSeconds.parseDateTime(dateString).withZone(DateTimeZone.forID("Asia/Shanghai"))
-            formattedString = dt.toString()
-        } catch (e: Exception) {
-            try {
-                val dt = fmtNoSecond.parseDateTime(dateString).withZone(DateTimeZone.forID("Asia/Shanghai"))
-                formattedString = dt.toString()
-            } catch (e: Exception) {
-                Log.d("formatDateString", "Unknown date format ${e.message}")
-            }
-        } finally {
-            return formattedString
-        }
-    }
-
-    private fun getCurrentTimeString(): String {
-        val dt = DateTime()
-        return dt.toString()
     }
 
     // Update the mutable live data with the index passed in
@@ -247,6 +181,20 @@ class StockListViewModel : ViewModel() {
         }
     }
 
+    // Called by xml to trigger action
+    fun onNext() {
+        coroutineScope.launch {
+            val currentItem = itemList!![currentIndex.value!!]
+            UpdateItemApi.prepareAndPutItemWithStatus(currentItem, ItemStatus.NOTPICKED)
+            // check if update is successful, if true, update view LiveData
+            if (UpdateItemApi.checkNoError()) {
+                _currentIndex.value = _currentIndex.value!! + 1
+                updateLiveDataWithIndex(_currentIndex.value!!)
+            }
+            UpdateItemApi.resetUpdateApiStatus()
+        }
+    }
+
     fun onRestock() {
         if (_eventRestock.value == false &&
             _eventOutOfStock.value == false && _eventResetOrder.value == false) {
@@ -257,7 +205,7 @@ class StockListViewModel : ViewModel() {
 
     fun onRestockComplete() {
         _eventRestock.value = false
-        _updateApiStatus.value = ApiStatus.NONE
+        UpdateItemApi.resetUpdateApiStatus()
     }
 
     fun onOutOfStock() {
@@ -272,9 +220,10 @@ class StockListViewModel : ViewModel() {
     fun onOutOfStockComplete(cancelled: Boolean) {
         coroutineScope.launch {
             if (!cancelled) {
-                updateItemStatusForIndex(currentIndex.value!!, ItemStatus.NOTPICKED)
+                val currentItem = itemList!![currentIndex.value!!]
+                UpdateItemApi.prepareAndPutItemWithStatus(currentItem, ItemStatus.NOTPICKED)
                 // check if update is successful and is last item
-                if (_updateApiStatus.value != ApiStatus.ERROR) {
+                if (UpdateItemApi.checkNoError()) {
                     if (isLastItem.value!!) {
                         // Finish the activity if is last item
                         _eventFinishActivity.value = true
@@ -285,7 +234,7 @@ class StockListViewModel : ViewModel() {
                 }
             }
             _eventOutOfStock.value = false
-            _updateApiStatus.value = ApiStatus.NONE
+            UpdateItemApi.resetUpdateApiStatus()
         }
     }
 
@@ -298,7 +247,7 @@ class StockListViewModel : ViewModel() {
 
     fun onResetOrderComplete() {
         _eventResetOrder.value = false
-        _updateApiStatus.value = ApiStatus.NONE
+        UpdateItemApi.resetUpdateApiStatus()
     }
 
     fun onFinishOrder() {
@@ -307,40 +256,20 @@ class StockListViewModel : ViewModel() {
 
     fun onFinishOrderComplete() {
         coroutineScope.launch {
-            updateItemStatusForIndex(currentIndex.value!!, ItemStatus.NOTPICKED)
+            val currentItem = itemList!![currentIndex.value!!]
+            UpdateItemApi.prepareAndPutItemWithStatus(currentItem, ItemStatus.NOTPICKED)
             // check if update is successful, if true, finish the activity
-            if (_updateApiStatus.value != ApiStatus.ERROR) {
+            if (UpdateItemApi.checkNoError()) {
                 // this will trigger the finish of activity
                 _eventFinishActivity.value = true
             }
             _eventFinishOrder.value = false
-            _updateApiStatus.value = ApiStatus.NONE
+            UpdateItemApi.resetUpdateApiStatus()
         }
     }
 
     fun onFinishActivityComplete() {
         _eventFinishActivity.value = false
-    }
-
-    fun onScan() {
-        _eventScan.value = true
-    }
-
-    fun onScanComplete() {
-        _eventScan.value = false
-    }
-
-    fun onNavigation() {
-        _eventNavigateToList.value = true
-    }
-
-    fun onNavigationComplete() {
-        _eventNavigateToList.value = false
-        _loadApiStatus.value = ApiStatus.NONE
-    }
-
-    fun onInputNetworkErrorComplete() {
-        _loadApiStatus.value = ApiStatus.NONE
     }
 
     fun onDisableControl() {
@@ -354,6 +283,8 @@ class StockListViewModel : ViewModel() {
     fun onDateFormatErrorComplete() {
         _eventDateFormatError.value = null
     }
+
+    //endregion
 
     override fun onCleared() {
         super.onCleared()

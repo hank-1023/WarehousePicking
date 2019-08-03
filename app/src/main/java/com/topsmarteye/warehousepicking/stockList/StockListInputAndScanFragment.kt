@@ -50,7 +50,7 @@ class StockListInputAndScanFragment : Fragment() {
                 ApiStatus.LOADING -> startLoadingAnimation()
                 ApiStatus.DONE -> {
                     stopLoadingAnimation()
-                    viewModel.onNavigation()
+                    viewModel.onNavigationToList()
                 }
                 ApiStatus.ERROR -> {
                     stopLoadingAnimation()
@@ -65,7 +65,7 @@ class StockListInputAndScanFragment : Fragment() {
             if (it) {
                 findNavController().navigate(StockListInputAndScanFragmentDirections
                     .actionStockListInputAndScanFragmentToStockListFragment())
-                viewModel.onNavigationComplete()
+                viewModel.onNavigationToListComplete()
             }
         })
     }
