@@ -25,6 +25,7 @@ class StockListInputAndScanFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         binding = DataBindingUtil.inflate(inflater,
             R.layout.fragment_stock_list_input_and_scan, container, false)
+        binding.lifecycleOwner = this
 
         setupViewModel()
         setupIntegrator()

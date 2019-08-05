@@ -10,7 +10,10 @@ import java.lang.Exception
 object LoginService {
     var authToken: String? = null
 
-    private var userData: UserData? = null
+    private val mutableUserData = MutableLiveData<UserData>()
+    val userData: LiveData<UserData>
+        get() = mutableUserData
+
     private val loggedIn = MutableLiveData<Boolean>()
     val isLoggedIn: LiveData<Boolean>
         get() = loggedIn
@@ -42,7 +45,7 @@ object LoginService {
         try {
             val response = GlobalApi.retrofitService.login(authToken!!, username, password)
             if (response.isSuccessful && response.body() != null) {
-                userData = response.body()!!.userData
+                mutableUserData.value = response.body()!!.userData
                 loggedIn.value = true
                 return true
             } else {
@@ -58,14 +61,14 @@ object LoginService {
     fun getUserData(): UserData? {
         return if (loggedIn.value!!) {
             // Will crash the app if tried to get userdata when not isLoggedIn
-            userData!!
+            mutableUserData.value!!
         } else {
             null
         }
     }
 
     fun logOut() {
-        userData = null
+        mutableUserData.value = null
         loggedIn.value = false
     }
 }

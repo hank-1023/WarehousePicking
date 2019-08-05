@@ -16,6 +16,7 @@ class RestockDialogActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         binding = DataBindingUtil.setContentView(this, R.layout.dialog_restock)
+        binding.lifecycleOwner = this
 
         binding.submitButton.setOnClickListener {
             onSubmit()

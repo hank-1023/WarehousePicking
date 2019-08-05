@@ -10,10 +10,6 @@ import kotlinx.coroutines.*
 
 class TaskSelectionViewModel : ViewModel() {
 
-    private val _displayName = MutableLiveData<String>()
-    val displayName: LiveData<String>
-        get() = _displayName
-
     private val _apiStatus = MutableLiveData<ApiStatus>()
     val apiStatus: LiveData<ApiStatus>
         get() = _apiStatus
@@ -33,8 +29,6 @@ class TaskSelectionViewModel : ViewModel() {
             val tokenResultSuccessful = LoginService.updateAuthToken()
             //check if token is got and check if successfully got userdata
             if (tokenResultSuccessful && LoginService.loginUser(username, password)) {
-                val userData = LoginService.getUserData()
-                _displayName.value = userData!!.displayName
                 _apiStatus.value = ApiStatus.DONE
             } else {
                 _apiStatus.value = ApiStatus.ERROR
@@ -42,9 +36,12 @@ class TaskSelectionViewModel : ViewModel() {
         }
     }
 
+    fun resetNetworkStatus() {
+        _apiStatus.value = ApiStatus.NONE
+    }
+
     fun onLogOut() {
         LoginService.logOut()
-        _displayName.value = null
     }
 
 
@@ -54,6 +51,7 @@ class TaskSelectionViewModel : ViewModel() {
 
     fun onQRCodeErrorComplete() {
         _eventQRCodeError.value = false
+        resetNetworkStatus()
     }
 
     override fun onCleared() {

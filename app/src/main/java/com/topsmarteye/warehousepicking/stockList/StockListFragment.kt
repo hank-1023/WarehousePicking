@@ -62,6 +62,13 @@ class StockListFragment : Fragment() {
             }
         })
 
+        stockListViewModel.eventNext.observe(this, Observer {
+            if (it) {
+                binding.nextButton.requestFocus()
+                stockListViewModel.onNextComplete()
+            }
+        })
+
         stockListViewModel.eventRestock.observe(this, Observer {
             if (it) {
                 binding.needsRestockingButton.requestFocus()
@@ -84,7 +91,6 @@ class StockListFragment : Fragment() {
 
         stockListViewModel.currentIndex.observe(this, Observer {
             // Whenever item changes, marquee for current item textView will start
-//            binding.nextButton.requestFocus()
             binding.nameTextView.isSelected = true
         })
 

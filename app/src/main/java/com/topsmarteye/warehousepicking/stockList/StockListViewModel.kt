@@ -51,6 +51,10 @@ class StockListViewModel : ViewModel() {
     val isLastItem: LiveData<Boolean>
         get() = _isLastItem
 
+    private val _eventNext = MutableLiveData<Boolean>()
+    val eventNext: LiveData<Boolean>
+        get() = _eventNext
+
     private val _eventRestock = MutableLiveData<Boolean>()
     val eventRestock: LiveData<Boolean>
         get() = _eventRestock
@@ -79,8 +83,11 @@ class StockListViewModel : ViewModel() {
     val eventFinishActivity: LiveData<Boolean>
         get() = _eventFinishActivity
 
-    private var viewModelJob = Job()
-    private val coroutineScope = CoroutineScope(viewModelJob + Dispatchers.Main)
+    private var stockListJob: Job? = null
+    private var stockListCoroutineScope: CoroutineScope? = null
+
+    private var inputAndScanJob = Job()
+    private val inputAndScanCoroutineScope = CoroutineScope(inputAndScanJob + Dispatchers.Main)
 
 
     init {
@@ -95,8 +102,8 @@ class StockListViewModel : ViewModel() {
     //region Logic for InputAndScanFragment
 
     fun loadStockList(orderNumber: String) {
-        coroutineScope.launch {
-            itemList = LoadOrderService.loadOrder(orderNumber)
+        inputAndScanCoroutineScope.launch {
+            itemList = LoadOrderService.loadOrderWithStatus(orderNumber, ItemStatus.NOTPICKED)
 
             if (!itemList.isNullOrEmpty()) {
                 _orderNumber.value = orderNumber
@@ -124,6 +131,9 @@ class StockListViewModel : ViewModel() {
     fun onNavigationToListComplete() {
         _eventNavigateToList.value = false
         LoadOrderService.resetLoadApiStatus()
+
+        stockListJob = Job()
+        stockListCoroutineScope = CoroutineScope(stockListJob!! + Dispatchers.Main)
     }
 
     fun onInputNetworkErrorComplete() {
@@ -133,15 +143,6 @@ class StockListViewModel : ViewModel() {
     //endregion
 
     //region Logic for StockListFragment
-
-//    private fun onListLoaded() {
-//        // Reset viewModel Properties
-//        _totalItems.value = itemList!!.size
-//        _currentIndex.value = 0
-//        _isLastItem.value = false
-//        // update currentItem and nextItem
-//        updateLiveDataWithIndex(0)
-//    }
 
     // Update the mutable live data with the index passed in
     private fun updateLiveDataWithIndex(index: Int) {
@@ -159,7 +160,13 @@ class StockListViewModel : ViewModel() {
 
     // Called by xml to trigger action
     fun onNext() {
-        coroutineScope.launch {
+        _eventNext.value = true
+
+    }
+
+    fun onNextComplete() {
+        _eventNext.value = false
+        stockListCoroutineScope!!.launch {
             val currentItem = itemList!![currentIndex.value!!]
             UpdateItemService.prepareAndPutItemWithStatus(currentItem, ItemStatus.NOTPICKED)
             // check if update is successful, if true, update view LiveData
@@ -194,22 +201,26 @@ class StockListViewModel : ViewModel() {
     }
 
     fun onOutOfStockComplete(cancelled: Boolean) {
-        coroutineScope.launch {
-            if (!cancelled) {
-                val currentItem = itemList!![currentIndex.value!!]
-                UpdateItemService.prepareAndPutItemWithStatus(currentItem, ItemStatus.NOTPICKED)
-                // check if update is successful and is last item
-                if (UpdateItemService.checkNoError()) {
-                    if (isLastItem.value!!) {
-                        // Finish the activity if is last item
-                        _eventFinishActivity.value = true
-                    } else {
-                        _currentIndex.value = _currentIndex.value!! + 1
-                        updateLiveDataWithIndex(_currentIndex.value!!)
-                    }
+        _eventOutOfStock.value = false
+
+        stockListCoroutineScope!!.launch {
+            if (cancelled) {
+                _eventOutOfStock.value = false
+                UpdateItemService.resetUpdateApiStatus()
+                return@launch
+            }
+            val currentItem = itemList!![currentIndex.value!!]
+            UpdateItemService.prepareAndPutItemWithStatus(currentItem, ItemStatus.NOTPICKED)
+            // check if update is successful and is last item
+            if (UpdateItemService.checkNoError()) {
+                if (isLastItem.value!!) {
+                    // Finish the activity if is last item
+                    _eventFinishActivity.value = true
+                } else {
+                    _currentIndex.value = _currentIndex.value!! + 1
+                    updateLiveDataWithIndex(_currentIndex.value!!)
                 }
             }
-            _eventOutOfStock.value = false
             UpdateItemService.resetUpdateApiStatus()
         }
     }
@@ -226,12 +237,16 @@ class StockListViewModel : ViewModel() {
         UpdateItemService.resetUpdateApiStatus()
     }
 
+
+
     fun onFinishOrder() {
         _eventFinishOrder.value = true
     }
 
     fun onFinishOrderComplete() {
-        coroutineScope.launch {
+        _eventFinishOrder.value = false
+
+        stockListCoroutineScope!!.launch {
             val currentItem = itemList!![currentIndex.value!!]
             UpdateItemService.prepareAndPutItemWithStatus(currentItem, ItemStatus.NOTPICKED)
             // check if update is successful, if true, finish the activity
@@ -239,7 +254,6 @@ class StockListViewModel : ViewModel() {
                 // this will trigger the finish of activity
                 _eventFinishActivity.value = true
             }
-            _eventFinishOrder.value = false
             UpdateItemService.resetUpdateApiStatus()
         }
     }
@@ -260,11 +274,18 @@ class StockListViewModel : ViewModel() {
         _eventDateFormatError.value = null
     }
 
+    fun onNavigateToInput() {
+        stockListJob!!.cancel()
+        LoadOrderService.resetResetApiStatus()
+        UpdateItemService.resetUpdateApiStatus()
+    }
+
+
     //endregion
 
     override fun onCleared() {
         super.onCleared()
-        viewModelJob.cancel()
+        inputAndScanJob.cancel()
     }
 
 

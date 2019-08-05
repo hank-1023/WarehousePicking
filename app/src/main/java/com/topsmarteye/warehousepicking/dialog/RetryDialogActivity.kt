@@ -15,6 +15,8 @@ class RetryDialogActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         binding = DataBindingUtil.setContentView(this, R.layout.dialog_retry)
+        binding.lifecycleOwner = this
+
         binding.titleTextView.text = intent.extras!!["dialogTitle"] as String
         binding.retryButton.text = intent.extras!!["buttonTitle"] as String
         binding.retryButton.setOnClickListener {

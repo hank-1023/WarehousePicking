@@ -22,6 +22,8 @@ class BackOrderActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_back_order)
+        binding.lifecycleOwner = this
+
         viewModel = ViewModelProviders.of(this).get(BackOrderViewModel::class.java)
 
         navController = findNavController(R.id.backOrderNavHostFragment)

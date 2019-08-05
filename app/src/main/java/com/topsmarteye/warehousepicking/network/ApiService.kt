@@ -36,7 +36,7 @@ interface ApiService {
     @GET("pPickDetialController/list/{taskID}")
     suspend fun getOrderItems(@Header("X-AUTH-TOKEN") authToken: String,
                               @Path("taskID", encoded = false) taskID: String,
-                              @Query("statuts") status: Int): Response<StockProperty>
+                              @Query("statuts", encoded = false) status: String): Response<StockProperty>
 
     @PUT("pPickDetialController/{stockID}")
     suspend fun updateOrderItem(@Header("X-AUTH-TOKEN") authToken: String,

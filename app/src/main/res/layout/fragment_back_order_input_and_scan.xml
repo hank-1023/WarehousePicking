@@ -29,7 +29,7 @@
                 style="@style/input_and_scan_edit_text_style"
                 android:hint="@string/order_number_edit_hint"
                 app:layout_constraintStart_toEndOf="@+id/orderNumberLabel"
-                android:layout_marginStart="33dp"
+                android:layout_marginStart="20dp"
                 app:layout_constraintBaseline_toBaselineOf="@+id/orderNumberLabel"
                 app:layout_constraintEnd_toEndOf="parent"
                 android:layout_marginEnd="52dp"
@@ -80,5 +80,16 @@
                 android:layout_marginTop="31dp"
                 app:layout_constraintEnd_toEndOf="@+id/orderNumberLabel"
                 app:layout_constraintStart_toStartOf="@+id/orderNumberLabel"/>
+
+        <ProgressBar
+                style="?android:attr/progressBarStyle"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:id="@+id/progressBar"
+                app:layout_constraintStart_toEndOf="@+id/orderNumberScanButton"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/orderNumberScanButton"
+                app:layout_constraintBottom_toBottomOf="@+id/orderNumberScanButton"
+                android:visibility="gone"/>
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

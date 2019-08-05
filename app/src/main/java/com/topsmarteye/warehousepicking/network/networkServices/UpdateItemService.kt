@@ -9,6 +9,7 @@ import com.topsmarteye.warehousepicking.network.ApiStatus
 import com.topsmarteye.warehousepicking.network.GlobalApi
 import com.topsmarteye.warehousepicking.network.ItemStatus
 import com.topsmarteye.warehousepicking.network.StockItem
+import kotlinx.coroutines.delay
 import java.lang.Exception
 
 object UpdateItemService {
@@ -45,7 +46,8 @@ object UpdateItemService {
     }
 
     // Only called after item has been prepared
-    suspend fun putItem(item: StockItem) {
+    private suspend fun putItem(item: StockItem) {
+
         try {
             var response = GlobalApi.retrofitService
                 .updateOrderItem(LoginService.authToken!!, item.stockId!!, item)
@@ -77,8 +79,7 @@ object UpdateItemService {
 
     // Should reset the status when error/done event has been handled
     fun resetUpdateApiStatus() {
-        mutableUpdateApiStatus.value =
-            ApiStatus.NONE
+        mutableUpdateApiStatus.value = ApiStatus.NONE
     }
 
     fun checkNoError(): Boolean {

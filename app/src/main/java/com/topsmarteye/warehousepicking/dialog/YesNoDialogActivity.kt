@@ -16,6 +16,8 @@ class YesNoDialogActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         binding = DataBindingUtil.setContentView(this, R.layout.dialog_yesno)
+        binding.lifecycleOwner = this
+
         binding.titleTextView.text = intent.extras!!["dialogTitle"] as String
 
         binding.yesButton.setOnClickListener {

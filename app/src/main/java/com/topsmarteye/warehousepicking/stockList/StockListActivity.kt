@@ -25,13 +25,17 @@ class StockListActivity : AppCompatActivity() {
     private lateinit var navController: NavController
     lateinit var stockListViewModel: StockListViewModel
 //    private lateinit var gestureDetector: GestureDetector
-    private var isStart = true
+
+    private var isStart: Boolean = true
+
     private var isControlDisabled: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         binding = DataBindingUtil.setContentView(this, R.layout.activity_stock_list)
+        binding.lifecycleOwner = this
+
         navController = findNavController(R.id.stockListNavHostFragment)
         // The stockListViewModel will be shared between this activity and its fragments
         stockListViewModel = ViewModelProviders.of(this).get(StockListViewModel::class.java)
@@ -141,6 +145,7 @@ class StockListActivity : AppCompatActivity() {
             finish()
         } else {
             navController.navigateUp()
+            stockListViewModel.onNavigateToInput()
         }
     }
 

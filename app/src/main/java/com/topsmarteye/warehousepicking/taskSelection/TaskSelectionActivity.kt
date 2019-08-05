@@ -31,7 +31,9 @@ class TaskSelectionActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         binding = DataBindingUtil.setContentView(this, R.layout.activity_task_selection)
+        binding.lifecycleOwner = this
 
+        // Will clear the viewModel on stop
         viewModel = ViewModelProviders.of(this)
             .get(TaskSelectionViewModel::class.java)
 
@@ -75,25 +77,18 @@ class TaskSelectionActivity : AppCompatActivity() {
     }
 
     private fun setupViewModelListener() {
-//        viewModel.isLoggedIn.observe(this, Observer {
-//            if (!it) {
-//                integrator.initiateScan()
-//            }
-//        })
-
-        viewModel.displayName.observe(this, Observer {
-            binding.staffIDTextView.text = it
-        })
-
-
         viewModel.apiStatus.observe(this, Observer { status ->
             when (status) {
                 ApiStatus.LOADING -> dialog.show()
                 ApiStatus.ERROR -> {
                     dismissLoadingDialog()
                     popDialogWithMessage(getString(R.string.network_error_message))
+                    viewModel.resetNetworkStatus()
                 }
-                ApiStatus.DONE -> dismissLoadingDialog()
+                ApiStatus.DONE -> {
+                    dismissLoadingDialog()
+                    viewModel.resetNetworkStatus()
+                }
                 else -> return@Observer
             }
         })
@@ -109,6 +104,14 @@ class TaskSelectionActivity : AppCompatActivity() {
         LoginService.isLoggedIn.observe(this, Observer {
             if (!it) {
                 integrator.initiateScan()
+            }
+        })
+
+        LoginService.userData.observe(this, Observer {
+            if (it != null) {
+                binding.staffIDTextView.text = it.displayName
+            } else {
+                binding.staffIDTextView.text = null
             }
         })
 
