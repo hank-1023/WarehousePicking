@@ -20,7 +20,7 @@ import com.topsmarteye.warehousepicking.dialog.YesNoDialogActivity
 import com.topsmarteye.warehousepicking.databinding.FragmentStockListBinding
 import com.topsmarteye.warehousepicking.dialog.RetryDialogActivity
 import com.topsmarteye.warehousepicking.network.ApiStatus
-import com.topsmarteye.warehousepicking.network.networkServices.UpdateItemService
+
 
 class StockListFragment : Fragment() {
 
@@ -39,7 +39,7 @@ class StockListFragment : Fragment() {
 
         binding.stockListViewModel = stockListViewModel
 
-        setViewModelObserver()
+        setupListeners()
 
         return binding.root
     }
@@ -50,7 +50,7 @@ class StockListFragment : Fragment() {
         binding.nameTextView.isSelected = true
     }
 
-    private fun setViewModelObserver() {
+    private fun setupListeners() {
 
         stockListViewModel.isLastItem.observe(this, Observer { isLastItem ->
             if (isLastItem) {
@@ -61,6 +61,8 @@ class StockListFragment : Fragment() {
                 binding.finishOrderButton.requestFocus()
             }
         })
+
+        // Doesn't need to think about clickable, since keyboard will be disabled when appropriate
 
         stockListViewModel.eventNext.observe(this, Observer {
             if (it) {
@@ -125,7 +127,7 @@ class StockListFragment : Fragment() {
             }
         })
 
-        UpdateItemService.updateApiStatus.observe(this, Observer {
+        stockListViewModel.listFragmentApiStatus.observe(this, Observer {
             when (it!!) {
                 ApiStatus.LOADING -> {
                     binding.submitGroup.visibility = View.VISIBLE
@@ -145,16 +147,16 @@ class StockListFragment : Fragment() {
 
     private fun disableControlButtons() {
         binding.nextButton.isEnabled = false
-        binding.needsRestockingButton.isEnabled = false
-        binding.outOfStockButton.isEnabled = false
-        binding.finishOrderButton.isEnabled = false
+        binding.needsRestockingButton.isClickable = false
+        binding.outOfStockButton.isClickable = false
+        binding.finishOrderButton.isClickable = false
     }
 
     private fun enableControlButtons() {
         binding.nextButton.isEnabled = true
-        binding.needsRestockingButton.isEnabled = true
-        binding.outOfStockButton.isEnabled = true
-        binding.finishOrderButton.isEnabled = true
+        binding.needsRestockingButton.isClickable = true
+        binding.outOfStockButton.isClickable = true
+        binding.finishOrderButton.isClickable = true
     }
 
     private fun popRestock() {

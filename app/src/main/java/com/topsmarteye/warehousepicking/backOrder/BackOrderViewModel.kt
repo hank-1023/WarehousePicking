@@ -5,17 +5,29 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 
 class BackOrderViewModel : ViewModel() {
-    private val _orderNumber = MutableLiveData<String>()
-    val orderNumber: LiveData<String>
-        get() = _orderNumber
+    private val _orderID = MutableLiveData<String>()
+    val orderID: LiveData<String>
+        get() = _orderID
 
-    private val _stockNumber = MutableLiveData<String>()
-    val stockNumber: LiveData<String>
-        get() = _stockNumber
+    private val _stockID = MutableLiveData<String>()
+    val stockID: LiveData<String>
+        get() = _stockID
 
     private val _eventKeyboardScan = MutableLiveData<Boolean>()
-    val eventScan: LiveData<Boolean>
+    val eventKeyboardScan: LiveData<Boolean>
         get() = _eventKeyboardScan
+
+    private val _eventOrderIDEdit = MutableLiveData<Boolean>()
+    val eventOrderIDEdit: LiveData<Boolean>
+        get() = _eventOrderIDEdit
+
+    private val _eventStockIDEdit = MutableLiveData<Boolean>()
+    val eventStockIDEdit: LiveData<Boolean>
+        get() = _eventStockIDEdit
+
+    private val _eventLoadOrderSuccess = MutableLiveData<Boolean>()
+    val eventLoadOrderSuccess: LiveData<Boolean>
+        get() = _eventLoadOrderSuccess
 
     init {
         _eventKeyboardScan.value = false
@@ -23,11 +35,11 @@ class BackOrderViewModel : ViewModel() {
 
 
     fun onSetOrderNumber(orderNumber: String) {
-        _orderNumber.value = orderNumber
+        _orderID.value = orderNumber
     }
 
     fun onSetStockNumber(stockNumber: String) {
-        _stockNumber.value = stockNumber
+        _stockID.value = stockNumber
     }
 
     fun onKeyboardScan() {
@@ -36,6 +48,31 @@ class BackOrderViewModel : ViewModel() {
 
     fun onKeyboardScanComplete() {
         _eventKeyboardScan.value = false
+    }
+
+    fun onOrderIDEdit() {
+        _eventOrderIDEdit.value = true
+    }
+
+    fun onOrderIDEditComplete() {
+        _eventOrderIDEdit.value = false
+        onLoadOrderSuccess()
+    }
+
+    fun onStockIDEdit() {
+        _eventStockIDEdit.value = true
+    }
+
+    fun onStockIDScanEditComplete() {
+        _eventStockIDEdit.value = false
+    }
+
+    fun onLoadOrderSuccess() {
+        _eventLoadOrderSuccess.value = true
+    }
+
+    fun onLoadOrderSuccessComplete() {
+        _eventLoadOrderSuccess.value = false
     }
 
 }

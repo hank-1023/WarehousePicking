@@ -2,10 +2,11 @@ package com.topsmarteye.warehousepicking.backOrder
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.EditText
+import android.view.inputmethod.EditorInfo
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
@@ -29,44 +30,81 @@ class BackOrderInputAndScanFragment : Fragment() {
             R.layout.fragment_back_order_input_and_scan, container, false)
         binding.lifecycleOwner = this
 
-        setupViewModel()
-        setViewListeners()
-
-        return binding.root
-    }
-
-    private fun setViewListeners() {
-        binding.orderNumberScanButton.setOnClickListener {
-            initiateOrderNumberScan()
-        }
-
-        binding.stockNumberScanButton.setOnClickListener {
-            initiateStockNumberScan()
-        }
-    }
-
-    private fun setupViewModel() {
         viewModel = activity?.run {
             ViewModelProviders.of(this).get(BackOrderViewModel::class.java)
         } ?: throw Exception("Invalid Activity")
 
-        setupIntegrator()
+        binding.stockIDGroup.visibility = View.GONE
 
-        viewModel.eventScan.observe(this, Observer {
+        setupIntegrator()
+        setListeners()
+
+        return binding.root
+    }
+
+    private fun setListeners() {
+        binding.orderIDScanButton.setOnClickListener {
+            viewModel.onOrderIDEdit()
+            initiateOrderNumberScan()
+        }
+
+        binding.stockIDScanButton.setOnClickListener {
+            viewModel.onStockIDEdit()
+            initiateStockNumberScan()
+        }
+
+        // hide the stockNumberGroup when editing order number
+        binding.orderIDEditText.setOnClickListener {
+            viewModel.onOrderIDEdit()
+        }
+
+        binding.orderIDEditText.setOnEditorActionListener { textView, i, keyEvent ->
+            if (textView.text.isEmpty() || textView.text == null) {
+                false
+            } else if (i == EditorInfo.IME_ACTION_DONE
+                || (keyEvent.action == KeyEvent.ACTION_DOWN && keyEvent.keyCode == KeyEvent.KEYCODE_ENTER)
+            ) {
+                viewModel.onSetOrderNumber(textView.text.toString())
+                viewModel.onOrderIDEditComplete()
+                true
+            } else {
+                false
+            }
+        }
+
+        viewModel.eventKeyboardScan.observe(this, Observer {
             if (it) {
-                if (activity?.currentFocus == binding.orderNumberEditText
-                    || activity?.currentFocus == binding.orderNumberScanButton
+                if (activity?.currentFocus == binding.orderIDEditText
+                    || activity?.currentFocus == binding.orderIDScanButton
                 ) {
-                    binding.orderNumberScanButton.requestFocus()
-                    binding.orderNumberScanButton.performClick()
-                } else if (activity?.currentFocus == binding.stockNumberEditText
-                    || activity?.currentFocus == binding.stockNumberScanButton
+                    binding.orderIDScanButton.requestFocus()
+                    binding.orderIDScanButton.performClick()
+                    viewModel.onKeyboardScanComplete()
+                } else if (activity?.currentFocus == binding.stockIDEditText
+                    || activity?.currentFocus == binding.stockIDScanButton
                 ) {
-                    binding.stockNumberScanButton.requestFocus()
-                    binding.stockNumberScanButton.performClick()
+                    binding.stockIDScanButton.requestFocus()
+                    binding.stockIDScanButton.performClick()
+                    viewModel.onKeyboardScanComplete()
                 }
             }
         })
+
+        // hide the stockNumberGroup whenever edit begins
+        viewModel.eventOrderIDEdit.observe(this, Observer {
+            if (it) {
+                binding.stockIDGroup.visibility = View.GONE
+            }
+        })
+
+        viewModel.eventLoadOrderSuccess.observe(this, Observer {
+            if (it) {
+                binding.stockIDEditText.text.clear()
+                binding.stockIDGroup.visibility = View.VISIBLE
+                viewModel.onLoadOrderSuccessComplete()
+            }
+        })
+
     }
 
     private fun setupIntegrator() {
@@ -78,18 +116,11 @@ class BackOrderInputAndScanFragment : Fragment() {
     private fun initiateOrderNumberScan() {
         integrator.setRequestCode(BACK_ORDER_ORDER_NUMBER_SCAN_REQUEST_CODE)
         integrator.initiateScan()
-        viewModel.onKeyboardScanComplete()
     }
 
     private fun initiateStockNumberScan() {
         integrator.setRequestCode(BACK_ORDER_STOCK_NUMBER_SCAN_REQUEST_CODE)
         integrator.initiateScan()
-        viewModel.onKeyboardScanComplete()
-    }
-
-    private fun clearText(view: View) {
-        val editText = view as EditText
-        editText.text.clear()
     }
 
 
@@ -97,16 +128,21 @@ class BackOrderInputAndScanFragment : Fragment() {
         super.onActivityResult(requestCode, resultCode, data)
 
         val result = IntentIntegrator.parseActivityResult(resultCode, data)
-        if (result == null || result.contents == null) {return}
+        // doesn't do anything if result is empty
+        if (result == null || result.contents.isNullOrEmpty()) {return}
 
         when (requestCode) {
             BACK_ORDER_ORDER_NUMBER_SCAN_REQUEST_CODE -> {
-                binding.orderNumberEditText.setText(result.contents)
-                binding.stockNumberEditText.requestFocus()
+                binding.orderIDEditText.setText(result.contents)
+                binding.stockIDEditText.requestFocus()
+                viewModel.onSetOrderNumber(result.contents)
+                viewModel.onOrderIDEditComplete()
             }
             BACK_ORDER_STOCK_NUMBER_SCAN_REQUEST_CODE -> {
-                binding.stockNumberEditText.setText(result.contents)
-                binding.stockNumberEditText.requestFocus()
+                binding.stockIDEditText.setText(result.contents)
+                binding.stockIDEditText.requestFocus()
+                viewModel.onSetStockNumber(result.contents)
+                viewModel.onStockIDScanEditComplete()
             }
         }
     }

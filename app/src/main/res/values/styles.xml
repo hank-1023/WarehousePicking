@@ -38,8 +38,8 @@
 
     <style name="input_and_scan_edit_text_style">
         <item name="android:layout_height">33dp</item>
-        <item name="android:inputType">number</item>
         <item name="android:ems">10</item>
+        <item name="android:inputType">number</item>
         <item name="android:background">@drawable/edit_text_background</item>
         <item name="android:shadowDx">0</item>
         <item name="android:shadowDy">0</item>

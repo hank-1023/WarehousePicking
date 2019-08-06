@@ -16,7 +16,6 @@ import com.topsmarteye.warehousepicking.databinding.ActivityStockListBinding
 import com.topsmarteye.warehousepicking.hideSystemUI
 import com.topsmarteye.warehousepicking.network.ApiStatus
 import com.topsmarteye.warehousepicking.network.networkServices.LoginService
-import com.topsmarteye.warehousepicking.network.networkServices.UpdateItemService
 
 
 class StockListActivity : AppCompatActivity() {
@@ -28,6 +27,7 @@ class StockListActivity : AppCompatActivity() {
 
     private var isStart: Boolean = true
 
+    // This will mirror eventDisableControl in viewModel
     private var isControlDisabled: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -55,7 +55,7 @@ class StockListActivity : AppCompatActivity() {
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         if (isStart && keyCode == KeyEvent.KEYCODE_STAR) {
-            stockListViewModel.onScan()
+            stockListViewModel.onInputFragmentKeyboardScan()
             return true
         } else if (!isStart && !isControlDisabled) {
             when (keyCode) {
@@ -110,10 +110,10 @@ class StockListActivity : AppCompatActivity() {
         })
 
         // Disable reset order button when loading
-        UpdateItemService.updateApiStatus.observe(this, Observer {
+        stockListViewModel.listFragmentApiStatus.observe(this, Observer {
             when (it) {
-                ApiStatus.LOADING -> binding.resetOrderButton.isEnabled = false
-                ApiStatus.NONE -> binding.resetOrderButton.isEnabled = true
+                ApiStatus.LOADING -> binding.resetOrderButton.isClickable = false
+                ApiStatus.NONE -> binding.resetOrderButton.isClickable = true
                 else -> return@Observer
             }
         })
@@ -152,7 +152,7 @@ class StockListActivity : AppCompatActivity() {
 //    private inner class FlingGestureListener : GestureDetector.SimpleOnGestureListener() {
 //        override fun onFling(e1: MotionEvent?, e2: MotionEvent?, velocityX: Float, velocityY: Float): Boolean {
 //            if (isStart) {
-//                stockListViewModel.onScan()
+//                stockListViewModel.onInputFragmentKeyboardScan()
 //                return true
 //            } else {
 //                return false

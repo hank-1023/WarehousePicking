@@ -14,7 +14,6 @@ import com.topsmarteye.warehousepicking.R
 import com.topsmarteye.warehousepicking.databinding.FragmentStockListInputAndScanBinding
 import com.topsmarteye.warehousepicking.dialog.RetryDialogActivity
 import com.topsmarteye.warehousepicking.network.ApiStatus
-import com.topsmarteye.warehousepicking.network.networkServices.LoadOrderService
 
 
 class StockListInputAndScanFragment : Fragment() {
@@ -39,25 +38,27 @@ class StockListInputAndScanFragment : Fragment() {
             ViewModelProviders.of(this).get(StockListViewModel::class.java)
         } ?: throw Exception("Invalid Activity")
 
-        viewModel.eventScan.observe(this, Observer {
+        viewModel.eventInputFragmentKeyboardScan.observe(this, Observer {
             if (it) {
-                binding.scanButton.requestFocus()
                 binding.scanButton.performClick()
-                viewModel.onScanComplete()
+                viewModel.onInputFragmentKeyboardScanComplete()
             }
         })
 
-        LoadOrderService.loadApiStatus.observe(this, Observer {
+        viewModel.inputFragmentApiStatus.observe(this, Observer {
             when (it) {
-                ApiStatus.LOADING -> startLoadingAnimation()
+                ApiStatus.LOADING -> {
+                    disableInteraction()
+                    startLoadingAnimation()
+                }
                 ApiStatus.DONE -> {
                     stopLoadingAnimation()
                     viewModel.onNavigationToList()
                 }
                 ApiStatus.ERROR -> {
                     stopLoadingAnimation()
+                    enableInteraction()
                     popDialogWithMessage(getString(R.string.get_order_error_message))
-                    viewModel.onInputNetworkErrorComplete()
                 }
                 else -> return@Observer
             }
@@ -73,15 +74,21 @@ class StockListInputAndScanFragment : Fragment() {
     }
 
     private fun startLoadingAnimation() {
-        binding.orderNumberEditText.isEnabled = false
-        binding.scanButton.isEnabled = false
         binding.loadingProgressGroup.visibility = View.VISIBLE
     }
 
     private fun stopLoadingAnimation() {
-        binding.orderNumberEditText.isEnabled = true
-        binding.scanButton.isEnabled = true
         binding.loadingProgressGroup.visibility = View.GONE
+    }
+
+    private fun disableInteraction() {
+        binding.orderIDEditText.isEnabled = false
+        binding.scanButton.isClickable = false
+    }
+
+    private fun enableInteraction() {
+        binding.orderIDEditText.isEnabled = true
+        binding.scanButton.isClickable = false
     }
 
     private fun setupIntegrator() {
@@ -92,11 +99,14 @@ class StockListInputAndScanFragment : Fragment() {
 
     private fun setViewListeners() {
         binding.scanButton.setOnClickListener {
-            integrator.initiateScan()
+            if (it.isClickable) {
+                it.requestFocus()
+                integrator.initiateScan()
+            }
         }
 
         // EditText listener
-        binding.orderNumberEditText.setOnEditorActionListener { textView, i, keyEvent ->
+        binding.orderIDEditText.setOnEditorActionListener { textView, i, keyEvent ->
             if (textView.text.isEmpty() || textView.text == null) {
                 false
             } else if (i == EditorInfo.IME_ACTION_DONE
@@ -122,7 +132,7 @@ class StockListInputAndScanFragment : Fragment() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         val result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data)
         if (result != null && result.contents != null) {
-            binding.orderNumberEditText.setText(result.contents)
+            binding.orderIDEditText.setText(result.contents)
             retrieveOrder(result.contents)
         } else {
             super.onActivityResult(requestCode, resultCode, data)

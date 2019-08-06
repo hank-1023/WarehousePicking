@@ -31,8 +31,11 @@ data class StockItem(val id: String?,
                      @Json(name = "fromLoc") val location: String?,
                      var finishTime: String?,
                      @Json(name = "matnrBarcode") val stockBarcode: String?,
-                     @Json(name = "qty") val quantity: String?,
-                     @Json(name = "matnr") val stockId: String?)
+                     @Json(name = "qty") val quantity: Int,
+                     @Json(name = "matnr") val stockId: String?,
+                     @Json(name = "dutoQty") var restockQuantity: Int,
+                     @Json(name = "pickQty") var pickQuantity: Int,
+                     @Json(name = "shortQty") var outOfStockQuantity: Int)
 
 
 enum class ItemStatus(val value: String) {

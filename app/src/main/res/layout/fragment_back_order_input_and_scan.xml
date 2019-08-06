@@ -25,15 +25,14 @@
 
         <EditText
                 android:layout_width="0dp"
-                android:id="@+id/orderNumberEditText"
+                android:id="@+id/orderIDEditText"
                 style="@style/input_and_scan_edit_text_style"
                 android:hint="@string/order_number_edit_hint"
                 app:layout_constraintStart_toEndOf="@+id/orderNumberLabel"
                 android:layout_marginStart="20dp"
                 app:layout_constraintBaseline_toBaselineOf="@+id/orderNumberLabel"
                 app:layout_constraintEnd_toEndOf="parent"
-                android:layout_marginEnd="52dp"
-                >
+                android:layout_marginEnd="52dp">
 
             <requestFocus/>
         </EditText>
@@ -42,20 +41,19 @@
                 android:layout_width="50dp"
                 android:layout_height="0dp"
                 app:srcCompat="@drawable/scan_icon"
-                android:id="@+id/orderNumberScanButton"
+                android:id="@+id/orderIDScanButton"
                 android:background="@drawable/square_button_background"
-                app:layout_constraintTop_toTopOf="@+id/orderNumberEditText"
-                app:layout_constraintBottom_toBottomOf="@+id/orderNumberEditText"
-                app:layout_constraintEnd_toEndOf="@+id/orderNumberEditText"/>
+                app:layout_constraintTop_toTopOf="@+id/orderIDEditText"
+                app:layout_constraintBottom_toBottomOf="@+id/orderIDEditText"
+                app:layout_constraintEnd_toEndOf="@+id/orderIDEditText"/>
 
         <EditText
                 android:layout_width="0dp"
-                android:inputType="number"
                 android:ems="10"
-                android:id="@+id/stockNumberEditText"
+                android:id="@+id/stockIDEditText"
                 style="@style/input_and_scan_edit_text_style"
-                app:layout_constraintStart_toStartOf="@+id/orderNumberEditText"
-                app:layout_constraintEnd_toEndOf="@+id/orderNumberEditText"
+                app:layout_constraintStart_toStartOf="@+id/orderIDEditText"
+                app:layout_constraintEnd_toEndOf="@+id/orderIDEditText"
                 app:layout_constraintBaseline_toBaselineOf="@+id/stockNumberLabel"
                 android:hint="@string/stock_number_edit_text_hint"/>
 
@@ -63,11 +61,11 @@
                 android:layout_width="50dp"
                 android:layout_height="0dp"
                 app:srcCompat="@drawable/scan_icon"
-                android:id="@+id/stockNumberScanButton"
+                android:id="@+id/stockIDScanButton"
                 android:background="@drawable/square_button_background"
-                app:layout_constraintTop_toTopOf="@+id/stockNumberEditText"
-                app:layout_constraintBottom_toBottomOf="@+id/stockNumberEditText"
-                app:layout_constraintEnd_toEndOf="@+id/stockNumberEditText"
+                app:layout_constraintTop_toTopOf="@+id/stockIDEditText"
+                app:layout_constraintBottom_toBottomOf="@+id/stockIDEditText"
+                app:layout_constraintEnd_toEndOf="@+id/stockIDEditText"
                 />
 
         <TextView
@@ -86,10 +84,17 @@
                 android:layout_width="30dp"
                 android:layout_height="30dp"
                 android:id="@+id/progressBar"
-                app:layout_constraintStart_toEndOf="@+id/orderNumberScanButton"
+                app:layout_constraintStart_toEndOf="@+id/orderIDScanButton"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="@+id/orderNumberScanButton"
-                app:layout_constraintBottom_toBottomOf="@+id/orderNumberScanButton"
+                app:layout_constraintTop_toTopOf="@+id/orderIDScanButton"
+                app:layout_constraintBottom_toBottomOf="@+id/orderIDScanButton"
                 android:visibility="gone"/>
+
+        <androidx.constraintlayout.widget.Group
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/stockIDGroup"
+                app:constraint_referenced_ids="stockNumberLabel,stockIDEditText,stockIDScanButton"/>
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

@@ -130,7 +130,7 @@
 
                 <TextView
                         android:id="@+id/quantityTextView"
-                        android:text="@{stockListViewModel.currentItem.quantity}"
+                        android:text="@{String.valueOf(stockListViewModel.currentItem.quantity)}"
                         tools:text="2"
                         app:layout_constraintEnd_toEndOf="@+id/quantityLabel"
                         app:layout_constraintStart_toStartOf="@+id/quantityLabel"
@@ -284,7 +284,7 @@
 
                 <TextView
                         android:id="@+id/nextItemQuantityTextView"
-                        android:text="@{stockListViewModel.nextItem.quantity}"
+                        android:text="@{String.valueOf(stockListViewModel.nextItem.quantity)}"
                         tools:text="2"
                         app:layout_constraintEnd_toEndOf="@+id/nextItemQuantityLabel"
                         app:layout_constraintStart_toStartOf="@+id/nextItemQuantityLabel"

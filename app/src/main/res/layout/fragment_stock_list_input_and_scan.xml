@@ -35,7 +35,7 @@
 
         <EditText
                 android:layout_width="0dp"
-                android:id="@+id/orderNumberEditText"
+                android:id="@+id/orderIDEditText"
                 app:layout_constraintStart_toEndOf="@+id/orderNumberLabel"
                 android:layout_marginStart="13dp"
                 app:layout_constraintBaseline_toBaselineOf="@+id/orderNumberLabel"
@@ -53,9 +53,9 @@
                 app:srcCompat="@drawable/scan_icon"
                 android:id="@+id/scanButton"
                 android:background="@drawable/square_button_background"
-                app:layout_constraintTop_toTopOf="@+id/orderNumberEditText"
-                app:layout_constraintBottom_toBottomOf="@+id/orderNumberEditText"
-                app:layout_constraintEnd_toEndOf="@+id/orderNumberEditText"/>
+                app:layout_constraintTop_toTopOf="@+id/orderIDEditText"
+                app:layout_constraintBottom_toBottomOf="@+id/orderIDEditText"
+                app:layout_constraintEnd_toEndOf="@+id/orderIDEditText"/>
 
         <ProgressBar
                 style="?android:attr/progressBarStyle"
@@ -64,7 +64,7 @@
                 android:id="@+id/progressBar"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/orderNumberEditText"
+                app:layout_constraintTop_toBottomOf="@+id/orderIDEditText"
                 app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintBottom_toTopOf="@+id/LoadingTextView"
                 app:layout_constraintVertical_chainStyle="packed"

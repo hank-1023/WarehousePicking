@@ -16,7 +16,6 @@ class BackOrderActivity : AppCompatActivity() {
     private lateinit var binding: ActivityBackOrderBinding
     private lateinit var navController: NavController
     private lateinit var viewModel: BackOrderViewModel
-//    private lateinit var gestureDetector: GestureDetector
     private var isStart = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,13 +34,8 @@ class BackOrderActivity : AppCompatActivity() {
             onUpButtonPressed()
         }
 
-//        gestureDetector = GestureDetector(this, FlingGestureListener())
     }
 
-//    override fun onTouchEvent(event: MotionEvent?): Boolean {
-//        gestureDetector.onTouchEvent(event)
-//        return super.onTouchEvent(event)
-//    }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         if (isStart && keyCode == KeyEvent.KEYCODE_STAR) {
@@ -58,14 +52,6 @@ class BackOrderActivity : AppCompatActivity() {
         hideSystemUI()
     }
 
-
-//    private inner class FlingGestureListener : GestureDetector.SimpleOnGestureListener() {
-//        override fun onFling(e1: MotionEvent?, e2: MotionEvent?, velocityX: Float, velocityY: Float): Boolean {
-//            viewModel.onKeyboardScan()
-//            return true
-//        }
-//
-//    }
 
     private fun onUpButtonPressed() {
         if (isStart) {
