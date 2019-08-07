@@ -2,6 +2,7 @@ package com.topsmarteye.warehousepicking.stockList
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.*
 import android.view.inputmethod.EditorInfo
 import androidx.databinding.DataBindingUtil
@@ -22,31 +23,38 @@ class StockListInputAndScanFragment : Fragment() {
     private lateinit var integrator: IntentIntegrator
     private lateinit var viewModel: StockListViewModel
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        viewModel = activity?.run {
+            ViewModelProviders.of(this).get(StockListViewModel::class.java)
+        } ?: throw Exception("Invalid Activity")
+
+        integrator = setupBarcodeIntegrator()
+
+    }
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         binding = DataBindingUtil.inflate(inflater,
             R.layout.fragment_stock_list_input_and_scan, container, false)
         binding.lifecycleOwner = this
 
-        setupViewModel()
-        setViewListeners()
-        integrator = setupBarcodeIntegrator()
+        setupViewModelListeners()
+        setupViewListeners()
 
         return binding.root
     }
 
-    private fun setupViewModel() {
-        viewModel = activity?.run {
-            ViewModelProviders.of(this).get(StockListViewModel::class.java)
-        } ?: throw Exception("Invalid Activity")
+    private fun setupViewModelListeners() {
 
-        viewModel.eventInputFragmentKeyboardScan.observe(this, Observer {
+        viewModel.eventInputFragmentKeyboardScan.observe(viewLifecycleOwner, Observer {
             if (it) {
                 binding.scanButton.performClick()
                 viewModel.onInputFragmentKeyboardScanComplete()
             }
         })
 
-        viewModel.inputFragmentApiStatus.observe(this, Observer {
+        viewModel.inputFragmentApiStatus.observe(viewLifecycleOwner, Observer {
             when (it) {
                 ApiStatus.LOADING -> {
                     disableInteraction()
@@ -65,7 +73,7 @@ class StockListInputAndScanFragment : Fragment() {
             }
         })
 
-        viewModel.eventNavigateToList.observe(this, Observer {
+        viewModel.eventNavigateToList.observe(viewLifecycleOwner, Observer {
             if (it) {
                 findNavController().navigate(StockListInputAndScanFragmentDirections
                     .actionStockListInputAndScanFragmentToStockListFragment())
@@ -92,7 +100,7 @@ class StockListInputAndScanFragment : Fragment() {
         binding.scanButton.isClickable = true
     }
 
-    private fun setViewListeners() {
+    private fun setupViewListeners() {
         binding.scanButton.setOnClickListener {
             if (it.isClickable) {
                 it.requestFocus()
@@ -100,14 +108,16 @@ class StockListInputAndScanFragment : Fragment() {
             }
         }
 
-        // EditText listener
+
         binding.orderIDEditText.setOnEditorActionListener { textView, i, keyEvent ->
-            if (textView.text.isEmpty() || textView.text == null) {
+            Log.d("orderIDEditText", "$i")
+
+
+            if (textView.text.isNullOrEmpty()) {
                 false
-            } else if (i == EditorInfo.IME_ACTION_DONE
-                || (keyEvent.action == KeyEvent.ACTION_DOWN && keyEvent.keyCode == KeyEvent.KEYCODE_ENTER)
-            ) {
-                retrieveOrder(textView.text.toString())
+            } else if (i == EditorInfo.IME_ACTION_DONE ||
+                (keyEvent.action == KeyEvent.ACTION_DOWN && keyEvent.keyCode == KeyEvent.KEYCODE_ENTER)) {
+                viewModel.loadStockList(textView.text.toString())
                 true
             } else {
                 false
@@ -128,13 +138,9 @@ class StockListInputAndScanFragment : Fragment() {
         val result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data)
         if (result != null && result.contents != null) {
             binding.orderIDEditText.setText(result.contents)
-            retrieveOrder(result.contents)
+            viewModel.loadStockList(result.contents)
         } else {
             super.onActivityResult(requestCode, resultCode, data)
         }
-    }
-
-    private fun retrieveOrder(orderNumber: String) {
-        viewModel.loadStockList(orderNumber)
     }
 }

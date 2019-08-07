@@ -34,6 +34,9 @@ class StockListViewModel : ViewModel() {
     val inputFragmentApiStatus: LiveData<ApiStatus>
         get() = _inputFragmentApiStatus
 
+    private var inputAndScanJob = Job()
+    private val inputAndScanCoroutineScope = CoroutineScope(inputAndScanJob + Dispatchers.Main)
+
     //endregion
 
     // The live data of order number
@@ -103,8 +106,7 @@ class StockListViewModel : ViewModel() {
     val listFragmentApiStatus: LiveData<ApiStatus>
         get() = _listFragmentApiStatus
 
-    private var inputAndScanJob = Job()
-    private val inputAndScanCoroutineScope = CoroutineScope(inputAndScanJob + Dispatchers.Main)
+
 
 
     init {
@@ -120,16 +122,21 @@ class StockListViewModel : ViewModel() {
 
 
     fun loadStockList(orderNumber: String) {
+        Log.d("orderIDEditText", "loadStockList triggered")
         inputAndScanCoroutineScope.launch {
+            Log.d("orderIDEditText", "scope launched triggered")
+
             _inputFragmentApiStatus.value = ApiStatus.LOADING
 
             try {
+                Log.d("orderIDEditText", "inside try")
                 itemList = LoadOrderService
                     .loadOrderWithStatus(orderNumber, ItemStatus.NOTPICKED).toMutableList()
                 itemList!!.addAll(LoadOrderService
                     .loadOrderWithStatus(orderNumber, ItemStatus.RESTOCK).toMutableList())
 
                 if (itemList!!.isNotEmpty()) {
+                    Log.d("orderIDEditText", "inside itemNotEmpty")
                     _orderNumber.value = orderNumber
                     _totalItems.value = itemList!!.size
                     _currentIndex.value = 0

@@ -16,6 +16,7 @@ import com.topsmarteye.warehousepicking.BACK_ORDER_ORDER_NUMBER_SCAN_REQUEST_COD
 import com.topsmarteye.warehousepicking.BACK_ORDER_STOCK_NUMBER_SCAN_REQUEST_CODE
 import com.topsmarteye.warehousepicking.R
 import com.topsmarteye.warehousepicking.databinding.FragmentBackOrderInputAndScanBinding
+import com.topsmarteye.warehousepicking.setupBarcodeIntegrator
 
 
 class BackOrderInputAndScanFragment : Fragment() {
@@ -24,19 +25,24 @@ class BackOrderInputAndScanFragment : Fragment() {
     private lateinit var viewModel: BackOrderViewModel
     private lateinit var integrator: IntentIntegrator
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        viewModel = activity?.run {
+            ViewModelProviders.of(this).get(BackOrderViewModel::class.java)
+        } ?: throw Exception("Invalid Activity")
+
+        integrator = setupBarcodeIntegrator()
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         binding = DataBindingUtil.inflate(inflater,
             R.layout.fragment_back_order_input_and_scan, container, false)
         binding.lifecycleOwner = this
 
-        viewModel = activity?.run {
-            ViewModelProviders.of(this).get(BackOrderViewModel::class.java)
-        } ?: throw Exception("Invalid Activity")
 
         binding.stockIDGroup.visibility = View.GONE
 
-        setupIntegrator()
         setListeners()
 
         return binding.root
@@ -62,8 +68,7 @@ class BackOrderInputAndScanFragment : Fragment() {
             if (textView.text.isEmpty() || textView.text == null) {
                 false
             } else if (i == EditorInfo.IME_ACTION_DONE
-                || (keyEvent.action == KeyEvent.ACTION_DOWN && keyEvent.keyCode == KeyEvent.KEYCODE_ENTER)
-            ) {
+                || (keyEvent.action == KeyEvent.ACTION_DOWN && keyEvent.keyCode == KeyEvent.KEYCODE_ENTER)) {
                 viewModel.onSetOrderNumber(textView.text.toString())
                 viewModel.onOrderIDEditComplete()
                 true
@@ -72,7 +77,7 @@ class BackOrderInputAndScanFragment : Fragment() {
             }
         }
 
-        viewModel.eventKeyboardScan.observe(this, Observer {
+        viewModel.eventKeyboardScan.observe(viewLifecycleOwner, Observer {
             if (it) {
                 if (activity?.currentFocus == binding.orderIDEditText
                     || activity?.currentFocus == binding.orderIDScanButton
@@ -91,13 +96,13 @@ class BackOrderInputAndScanFragment : Fragment() {
         })
 
         // hide the stockNumberGroup whenever edit begins
-        viewModel.eventOrderIDEdit.observe(this, Observer {
+        viewModel.eventOrderIDEdit.observe(viewLifecycleOwner, Observer {
             if (it) {
                 binding.stockIDGroup.visibility = View.GONE
             }
         })
 
-        viewModel.eventLoadOrderSuccess.observe(this, Observer {
+        viewModel.eventLoadOrderSuccess.observe(viewLifecycleOwner, Observer {
             if (it) {
                 binding.stockIDEditText.text.clear()
                 binding.stockIDGroup.visibility = View.VISIBLE
@@ -105,12 +110,6 @@ class BackOrderInputAndScanFragment : Fragment() {
             }
         })
 
-    }
-
-    private fun setupIntegrator() {
-        integrator = IntentIntegrator.forSupportFragment(this)
-        integrator.setDesiredBarcodeFormats(IntentIntegrator.ONE_D_CODE_TYPES)
-        integrator.setPrompt(getString(R.string.please_scan_barcode))
     }
 
     private fun initiateOrderNumberScan() {

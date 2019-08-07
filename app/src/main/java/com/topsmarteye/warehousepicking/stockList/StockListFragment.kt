@@ -26,20 +26,26 @@ class StockListFragment : Fragment() {
     private lateinit var stockListViewModel: StockListViewModel
     private lateinit var integrator: IntentIntegrator
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        binding = DataBindingUtil.inflate(inflater,
-            R.layout.fragment_stock_list, container, false)
-        binding.lifecycleOwner = this
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
 
         // Get shared viewModel
         stockListViewModel = activity?.run {
             ViewModelProviders.of(this).get(StockListViewModel::class.java)
         } ?: throw Exception("Invalid Activity")
 
+        integrator = setupBarcodeIntegrator()
+
+    }
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        binding = DataBindingUtil.inflate(inflater,
+            R.layout.fragment_stock_list, container, false)
+        binding.lifecycleOwner = this
+
         binding.stockListViewModel = stockListViewModel
 
         setupListeners()
-        integrator = setupBarcodeIntegrator()
 
         return binding.root
     }
@@ -52,7 +58,7 @@ class StockListFragment : Fragment() {
 
     private fun setupListeners() {
 
-        stockListViewModel.isLastItem.observe(this, Observer { isLastItem ->
+        stockListViewModel.isLastItem.observe(viewLifecycleOwner, Observer { isLastItem ->
             if (isLastItem) {
                 binding.nextItemCardView.visibility = View.GONE
             } else {
@@ -62,7 +68,7 @@ class StockListFragment : Fragment() {
 
         // Doesn't need to think about clickable, since keyboard will be disabled when appropriate
 
-        stockListViewModel.eventNext.observe(this, Observer {
+        stockListViewModel.eventNext.observe(viewLifecycleOwner, Observer {
             if (it) {
                 binding.nextButton.requestFocus()
                 integrator.setRequestCode(STOCK_LIST_NEXT_SCAN_REQUEST_CODE)
@@ -70,7 +76,7 @@ class StockListFragment : Fragment() {
             }
         })
 
-        stockListViewModel.eventRestock.observe(this, Observer {
+        stockListViewModel.eventRestock.observe(viewLifecycleOwner, Observer {
             if (it) {
                 binding.needsRestockingButton.requestFocus()
                 integrator.setRequestCode(STOCK_LIST_RESTOCK_SCAN_REQUEST_CODE)
@@ -78,32 +84,32 @@ class StockListFragment : Fragment() {
             }
         })
 
-        stockListViewModel.eventOutOfStock.observe(this, Observer {
+        stockListViewModel.eventOutOfStock.observe(viewLifecycleOwner, Observer {
             if (it) {
                 binding.outOfStockButton.requestFocus()
                 popOutOfStock()
             }
         })
 
-        stockListViewModel.eventResetOrder.observe(this, Observer {
+        stockListViewModel.eventResetOrder.observe(viewLifecycleOwner, Observer {
             if (it) {
                 popResetOrder()
             }
         })
 
-        stockListViewModel.currentIndex.observe(this, Observer {
+        stockListViewModel.currentIndex.observe(viewLifecycleOwner, Observer {
             // Whenever item changes, marquee for current item textView will start
             binding.nameTextView.isSelected = true
         })
 
-        stockListViewModel.eventFinishActivity.observe(this, Observer {
+        stockListViewModel.eventFinishActivity.observe(viewLifecycleOwner, Observer {
             if (it) {
                 stockListViewModel.onFinishActivityComplete()
                 activity?.finish()
             }
         })
 
-        stockListViewModel.eventDisableControl.observe(this, Observer {
+        stockListViewModel.eventDisableControl.observe(viewLifecycleOwner, Observer {
             if (it) {
                 disableControlButtons()
             } else {
@@ -111,14 +117,14 @@ class StockListFragment : Fragment() {
             }
         })
 
-        stockListViewModel.eventDateFormatError.observe(this, Observer {
+        stockListViewModel.eventDateFormatError.observe(viewLifecycleOwner, Observer {
             if (it != null) {
                 popDateFormatError()
                 stockListViewModel.onDateFormatErrorComplete()
             }
         })
 
-        stockListViewModel.listFragmentApiStatus.observe(this, Observer {
+        stockListViewModel.listFragmentApiStatus.observe(viewLifecycleOwner, Observer {
             when (it!!) {
                 ApiStatus.LOADING -> {
                     startAnimation()
@@ -137,7 +143,7 @@ class StockListFragment : Fragment() {
             }
         })
 
-        stockListViewModel.eventBarcodeConfirmError.observe(this, Observer {
+        stockListViewModel.eventBarcodeConfirmError.observe(viewLifecycleOwner, Observer {
             if (it) {
                 popBarcodeConfirmError()
                 // Don't care about the result, so complete here
@@ -145,7 +151,7 @@ class StockListFragment : Fragment() {
             }
         })
 
-        stockListViewModel.eventOrderReloaded.observe(this, Observer {
+        stockListViewModel.eventOrderReloaded.observe(viewLifecycleOwner, Observer {
             if (it) {
                 Toast.makeText(context, getString(R.string.order_reloaded), Toast.LENGTH_SHORT).show()
                 stockListViewModel.onOrderReloadedComplete()
