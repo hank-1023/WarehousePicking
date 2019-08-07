@@ -9,15 +9,16 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="283dp"
-            android:layout_height="140dp">
+            android:layout_height="155dp">
 
         <TextView
                 android:text="@string/quantity_to_restock"
                 android:id="@+id/quantityLabel"
                 app:layout_constraintStart_toStartOf="parent"
                 android:layout_marginStart="20dp"
-                app:layout_constraintTop_toTopOf="parent"
-                style="@style/dialog_title_textview_style"/>
+                style="@style/dialog_title_textview_style"
+                android:layout_marginTop="30dp"
+                app:layout_constraintTop_toBottomOf="@+id/errorMessageTextView"/>
 
         <EditText
                 android:layout_width="150dp"
@@ -39,7 +40,8 @@
                 android:paddingStart="13dp"
                 android:paddingEnd="10dp"
                 app:layout_constraintTop_toTopOf="@+id/quantityLabel"
-                app:layout_constraintBottom_toBottomOf="@+id/quantityLabel"/>
+                app:layout_constraintBottom_toBottomOf="@+id/quantityLabel"
+                android:imeOptions="actionDone"/>
 
         <Button
                 android:text="@string/submit"
@@ -49,9 +51,22 @@
                 android:background="@drawable/blue_gradient_button_background"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                android:layout_marginBottom="20dp"
                 app:layout_constraintBottom_toBottomOf="parent"
-                android:textColor="@drawable/blue_gradient_button_text_color">
+                android:textColor="@drawable/blue_gradient_button_text_color"
+                android:layout_marginTop="8dp"
+                app:layout_constraintTop_toBottomOf="@+id/quantityEditText">
         </Button>
+
+        <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/errorMessageTextView"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                android:layout_marginTop="8dp"
+                android:textColor="#E01313"
+                android:text="@string/quantity_error_message"
+                android:visibility="gone"/>
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

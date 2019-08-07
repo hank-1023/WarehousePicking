@@ -1,9 +1,11 @@
 package com.topsmarteye.warehousepicking
 
+import android.content.Context
 import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import com.google.zxing.integration.android.IntentIntegrator
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import org.joda.time.format.DateTimeFormat
@@ -52,6 +54,16 @@ fun getCurrentTimeString(): String {
     return dt.toString()
 }
 
+// this only does basic initialization, request code should still be set separately
+fun Fragment.setupBarcodeIntegrator(): IntentIntegrator {
+    val integrator = IntentIntegrator.forSupportFragment(this)
+    integrator.setDesiredBarcodeFormats(IntentIntegrator.ONE_D_CODE_TYPES)
+    integrator.setPrompt(getString(R.string.please_scan_barcode))
+
+    return integrator
+}
+
+
 
 const val RESTOCK_DIALOG_REQUEST_CODE = 0
 const val OUT_OF_STOCK_DIALOG_REQUEST_CODE = 1
@@ -60,3 +72,5 @@ const val BACK_ORDER_ORDER_NUMBER_SCAN_REQUEST_CODE = 3
 const val BACK_ORDER_STOCK_NUMBER_SCAN_REQUEST_CODE = 4
 const val RETRY_DIALOG_REQUEST_CODE = 5
 const val LOGIN_ACTIVITY_REQUEST_CODE = 6
+const val STOCK_LIST_NEXT_SCAN_REQUEST_CODE = 7
+const val STOCK_LIST_RESTOCK_SCAN_REQUEST_CODE = 8

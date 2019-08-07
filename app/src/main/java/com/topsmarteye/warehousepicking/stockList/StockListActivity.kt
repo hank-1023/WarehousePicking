@@ -76,10 +76,6 @@ class StockListActivity : AppCompatActivity() {
                     stockListViewModel.onResetOrder()
                     return true
                 }
-                KeyEvent.KEYCODE_5 -> {
-                    stockListViewModel.onFinishOrder()
-                    return true
-                }
             }
         }
 

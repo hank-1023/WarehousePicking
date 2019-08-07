@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.google.zxing.integration.android.IntentResult
 import com.topsmarteye.warehousepicking.network.*
 import com.topsmarteye.warehousepicking.network.networkServices.LoadOrderService
 import com.topsmarteye.warehousepicking.network.networkServices.UpdateItemService
@@ -79,10 +80,6 @@ class StockListViewModel : ViewModel() {
     val eventResetOrder: LiveData<Boolean>
         get() = _eventResetOrder
 
-    private val _eventFinishOrder = MutableLiveData<Boolean>()
-    val eventFinishOrder: LiveData<Boolean>
-        get() = _eventFinishOrder
-
     private val _eventDateFormatError = MutableLiveData<Exception>()
     val eventDateFormatError: LiveData<Exception>
         get() = _eventDateFormatError
@@ -90,6 +87,10 @@ class StockListViewModel : ViewModel() {
     private val _eventFinishActivity = MutableLiveData<Boolean>()
     val eventFinishActivity: LiveData<Boolean>
         get() = _eventFinishActivity
+
+    private val _eventBarcodeConfirmError = MutableLiveData<Boolean>()
+    val eventBarcodeConfirmError: LiveData<Boolean>
+        get() = _eventBarcodeConfirmError
 
     private var stockListJob: Job? = null
     private var stockListCoroutineScope: CoroutineScope? = null
@@ -112,6 +113,7 @@ class StockListViewModel : ViewModel() {
     }
 
     //region Logic for InputAndScanFragment
+
 
     fun loadStockList(orderNumber: String) {
         inputAndScanCoroutineScope.launch {
@@ -174,6 +176,16 @@ class StockListViewModel : ViewModel() {
         }
     }
 
+    private fun updateViewToNext() {
+        if (isLastItem.value!!) {
+            // Finish the activity if is last item
+            _eventFinishActivity.value = true
+        } else {
+            _currentIndex.value = _currentIndex.value!! + 1
+            updateLiveDataWithIndex(_currentIndex.value!!)
+        }
+    }
+
     private suspend fun checkRestockItems() {
         val restockItems = stockListCoroutineScope!!.async {
             LoadOrderService.loadOrderWithStatus(_orderNumber.value!!, ItemStatus.RESTOCK)
@@ -186,19 +198,25 @@ class StockListViewModel : ViewModel() {
 
     }
 
-    fun onNextComplete() {
+    fun onNextComplete(scanResult: IntentResult?) {
         _eventNext.value = false
+
+        if (!confirmBarcodeFromScanResult(scanResult)) {
+            _eventBarcodeConfirmError.value = true
+            return
+        }
+
         stockListCoroutineScope!!.launch {
 
             val currentItem = itemList!![currentIndex.value!!]
             currentItem.status = ItemStatus.NOTPICKED.value
+            currentItem.pickQuantity = currentItem.quantity
 
             _listFragmentApiStatus.value = ApiStatus.LOADING
 
             try {
                 UpdateItemService.putItemWithStatus(currentItem, true)
-                _currentIndex.value = _currentIndex.value!! + 1
-                updateLiveDataWithIndex(_currentIndex.value!!)
+                updateViewToNext()
                 _listFragmentApiStatus.value = ApiStatus.DONE
             } catch (e: Exception) {
                 Log.d("StockListViewMode", "onNextComplete error ${e.message}")
@@ -210,6 +228,17 @@ class StockListViewModel : ViewModel() {
         }
     }
 
+    fun confirmBarcodeFromScanResult(scanResult: IntentResult?): Boolean {
+        if (scanResult == null ||
+            scanResult.contents.isNullOrEmpty() ||
+            _currentItem.value == null ||
+            _currentItem.value!!.stockBarcode == null) {
+            return false
+        }
+
+        return scanResult.contents == _currentItem.value!!.stockBarcode
+    }
+
     fun onRestock() {
         if (_eventRestock.value == false &&
             _eventOutOfStock.value == false && _eventResetOrder.value == false) {
@@ -218,10 +247,33 @@ class StockListViewModel : ViewModel() {
         }
     }
 
-    fun onRestockComplete() {
+    fun onRestockComplete(restockQuantity: Int?) {
         _eventRestock.value = false
-        _listFragmentApiStatus.value = ApiStatus.NONE
+
+        // cancelled
+        if (restockQuantity == null) {return}
+
+        stockListCoroutineScope!!.launch {
+            val currentItem = itemList!![currentIndex.value!!]
+            currentItem.status = ItemStatus.NOTPICKED.value
+            currentItem.restockQuantity = restockQuantity
+
+            _listFragmentApiStatus.value = ApiStatus.LOADING
+            try {
+                UpdateItemService.putItemWithStatus(currentItem, false)
+                updateViewToNext()
+                _listFragmentApiStatus.value = ApiStatus.DONE
+            } catch (e: Exception) {
+                Log.d("StockListViewMode", "onRestockComplete error ${e.message}")
+                _listFragmentApiStatus.value = ApiStatus.ERROR
+            } finally {
+                _listFragmentApiStatus.value = ApiStatus.NONE
+
+            }
+        }
     }
+
+
 
     fun onOutOfStock() {
         // Prevent more than one dialog window popping up
@@ -235,12 +287,11 @@ class StockListViewModel : ViewModel() {
     fun onOutOfStockComplete(cancelled: Boolean) {
         _eventOutOfStock.value = false
 
+        if (cancelled) {
+            return
+        }
+
         stockListCoroutineScope!!.launch {
-            if (cancelled) {
-                _eventOutOfStock.value = false
-                _listFragmentApiStatus.value = ApiStatus.NONE
-                return@launch
-            }
             val currentItem = itemList!![currentIndex.value!!]
             currentItem.status = ItemStatus.NOTPICKED.value
             currentItem.outOfStockQuantity = currentItem.quantity
@@ -249,13 +300,7 @@ class StockListViewModel : ViewModel() {
 
             try {
                 UpdateItemService.putItemWithStatus(currentItem, false)
-                if (isLastItem.value!!) {
-                    // Finish the activity if is last item
-                    _eventFinishActivity.value = true
-                } else {
-                    _currentIndex.value = _currentIndex.value!! + 1
-                    updateLiveDataWithIndex(_currentIndex.value!!)
-                }
+                updateViewToNext()
                 _listFragmentApiStatus.value = ApiStatus.DONE
             } catch (e: Exception) {
                 Log.d("StockListViewMode", "onOutOfStockComplete error ${e.message}")
@@ -279,35 +324,6 @@ class StockListViewModel : ViewModel() {
         _listFragmentApiStatus.value = ApiStatus.NONE
     }
 
-
-
-    fun onFinishOrder() {
-        _eventFinishOrder.value = true
-    }
-
-    fun onFinishOrderComplete() {
-        _eventFinishOrder.value = false
-
-        stockListCoroutineScope!!.launch {
-            val currentItem = itemList!![currentIndex.value!!]
-            currentItem.status = ItemStatus.NOTPICKED.value
-
-            _listFragmentApiStatus.value = ApiStatus.LOADING
-
-            try {
-                UpdateItemService.putItemWithStatus(currentItem, true)
-                _eventFinishActivity.value = true
-                _listFragmentApiStatus.value = ApiStatus.DONE
-            } catch (e: Exception) {
-                Log.d("StockListViewMode", "onFinishOrderComplete error ${e.message}")
-                _listFragmentApiStatus.value = ApiStatus.ERROR
-            } finally {
-                _listFragmentApiStatus.value = ApiStatus.NONE
-            }
-
-        }
-    }
-
     fun onFinishActivityComplete() {
         _eventFinishActivity.value = false
     }
@@ -327,6 +343,14 @@ class StockListViewModel : ViewModel() {
     fun onNavigateToInput() {
         stockListJob!!.cancel()
         _listFragmentApiStatus.value = ApiStatus.NONE
+    }
+
+    fun onBarcodeConfirmError() {
+        _eventBarcodeConfirmError.value = true
+    }
+
+    fun onBarcodeConfirmErrorComplete() {
+        _eventBarcodeConfirmError.value = false
     }
 
 

@@ -14,6 +14,7 @@ import com.topsmarteye.warehousepicking.R
 import com.topsmarteye.warehousepicking.databinding.FragmentStockListInputAndScanBinding
 import com.topsmarteye.warehousepicking.dialog.RetryDialogActivity
 import com.topsmarteye.warehousepicking.network.ApiStatus
+import com.topsmarteye.warehousepicking.setupBarcodeIntegrator
 
 
 class StockListInputAndScanFragment : Fragment() {
@@ -27,8 +28,8 @@ class StockListInputAndScanFragment : Fragment() {
         binding.lifecycleOwner = this
 
         setupViewModel()
-        setupIntegrator()
         setViewListeners()
+        integrator = setupBarcodeIntegrator()
 
         return binding.root
     }
@@ -88,13 +89,7 @@ class StockListInputAndScanFragment : Fragment() {
 
     private fun enableInteraction() {
         binding.orderIDEditText.isEnabled = true
-        binding.scanButton.isClickable = false
-    }
-
-    private fun setupIntegrator() {
-        integrator = IntentIntegrator.forSupportFragment(this)
-        integrator.setDesiredBarcodeFormats(IntentIntegrator.ONE_D_CODE_TYPES)
-        integrator.setPrompt(getString(R.string.please_scan_barcode))
+        binding.scanButton.isClickable = true
     }
 
     private fun setViewListeners() {

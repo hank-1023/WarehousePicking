@@ -317,24 +317,6 @@
 
         </androidx.cardview.widget.CardView>
 
-        <Button
-                android:text="@string/finish_order"
-                android:layout_width="0dp"
-                android:layout_height="40dp"
-                android:id="@+id/finishOrderButton"
-                android:background="@drawable/blue_gradient_button_background"
-                app:layout_constraintEnd_toEndOf="parent"
-                android:layout_marginEnd="133dp"
-                app:layout_constraintStart_toStartOf="parent"
-                android:layout_marginStart="133dp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/currentItemCardView"
-                app:layout_constraintHorizontal_bias="0.5"
-                android:textSize="20sp"
-                android:textColor="@drawable/blue_gradient_button_text_color"
-                android:visibility="gone"
-                android:onClick="@{() -> stockListViewModel.onFinishOrder()}"/>
-
         <ProgressBar
                 style="?android:attr/progressBarStyle"
                 android:layout_width="30dp"
@@ -343,7 +325,8 @@
                 app:layout_constraintBottom_toTopOf="@+id/currentItemCardView"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintEnd_toStartOf="@+id/submitTextView"
-                android:layout_marginEnd="13dp"/>
+                android:layout_marginEnd="13dp"
+                android:visibility="gone"/>
 
         <TextView
                 android:text="@string/submitting"
@@ -352,15 +335,9 @@
                 android:id="@+id/submitTextView"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toTopOf="@+id/currentItemCardView"
+                app:layout_constraintVertical_bias="0.51"
                 app:layout_constraintEnd_toEndOf="parent"
                 android:layout_marginEnd="100dp"
-                app:layout_constraintVertical_bias="0.51"/>
-
-        <androidx.constraintlayout.widget.Group
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/submitGroup"
-                app:constraint_referenced_ids="submitProgressBar,submitTextView"
                 android:visibility="gone"/>
 
 

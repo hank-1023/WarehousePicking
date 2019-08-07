@@ -11,10 +11,8 @@ import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
-import com.topsmarteye.warehousepicking.OUT_OF_STOCK_DIALOG_REQUEST_CODE
-import com.topsmarteye.warehousepicking.R
-import com.topsmarteye.warehousepicking.RESET_ORDER_DIALOG_REQUEST_CODE
-import com.topsmarteye.warehousepicking.RESTOCK_DIALOG_REQUEST_CODE
+import com.google.zxing.integration.android.IntentIntegrator
+import com.topsmarteye.warehousepicking.*
 import com.topsmarteye.warehousepicking.dialog.RestockDialogActivity
 import com.topsmarteye.warehousepicking.dialog.YesNoDialogActivity
 import com.topsmarteye.warehousepicking.databinding.FragmentStockListBinding
@@ -26,6 +24,7 @@ class StockListFragment : Fragment() {
 
     private lateinit var binding: FragmentStockListBinding
     private lateinit var stockListViewModel: StockListViewModel
+    private lateinit var integrator: IntentIntegrator
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         binding = DataBindingUtil.inflate(inflater,
@@ -40,6 +39,7 @@ class StockListFragment : Fragment() {
         binding.stockListViewModel = stockListViewModel
 
         setupListeners()
+        integrator = setupBarcodeIntegrator()
 
         return binding.root
     }
@@ -55,10 +55,6 @@ class StockListFragment : Fragment() {
         stockListViewModel.isLastItem.observe(this, Observer { isLastItem ->
             if (isLastItem) {
                 binding.nextItemCardView.visibility = View.GONE
-                binding.finishOrderButton.visibility = View.VISIBLE
-                binding.nextButton.visibility = View.GONE
-
-                binding.finishOrderButton.requestFocus()
             }
         })
 
@@ -67,14 +63,16 @@ class StockListFragment : Fragment() {
         stockListViewModel.eventNext.observe(this, Observer {
             if (it) {
                 binding.nextButton.requestFocus()
-                stockListViewModel.onNextComplete()
+                integrator.setRequestCode(STOCK_LIST_NEXT_SCAN_REQUEST_CODE)
+                integrator.initiateScan()
             }
         })
 
         stockListViewModel.eventRestock.observe(this, Observer {
             if (it) {
                 binding.needsRestockingButton.requestFocus()
-                popRestock()
+                integrator.setRequestCode(STOCK_LIST_RESTOCK_SCAN_REQUEST_CODE)
+                integrator.initiateScan()
             }
         })
 
@@ -94,15 +92,6 @@ class StockListFragment : Fragment() {
         stockListViewModel.currentIndex.observe(this, Observer {
             // Whenever item changes, marquee for current item textView will start
             binding.nameTextView.isSelected = true
-        })
-
-        stockListViewModel.eventFinishOrder.observe(this, Observer {
-            if (it) {
-                if (binding.finishOrderButton.visibility == View.VISIBLE) {
-                    binding.finishOrderButton.requestFocus()
-                }
-                stockListViewModel.onFinishOrderComplete()
-            }
         })
 
         stockListViewModel.eventFinishActivity.observe(this, Observer {
@@ -130,17 +119,27 @@ class StockListFragment : Fragment() {
         stockListViewModel.listFragmentApiStatus.observe(this, Observer {
             when (it!!) {
                 ApiStatus.LOADING -> {
-                    binding.submitGroup.visibility = View.VISIBLE
+                    startAnimation()
                     stockListViewModel.onDisableControl()
                 }
                 ApiStatus.ERROR -> {
-                    binding.submitGroup.visibility = View.GONE
                     popUpdateError()
                 }
                 ApiStatus.DONE -> {
-                    binding.submitGroup.visibility = View.GONE
+                    return@Observer
                 }
-                ApiStatus.NONE -> stockListViewModel.onDisableControlComplete()
+                ApiStatus.NONE -> {
+                    stopAnimation()
+                    stockListViewModel.onDisableControlComplete()
+                }
+            }
+        })
+
+        stockListViewModel.eventBarcodeConfirmError.observe(this, Observer {
+            if (it) {
+                popBarcodeConfirmError()
+                // Don't care about the result, so complete here
+                stockListViewModel.onBarcodeConfirmErrorComplete()
             }
         })
     }
@@ -149,18 +148,28 @@ class StockListFragment : Fragment() {
         binding.nextButton.isEnabled = false
         binding.needsRestockingButton.isClickable = false
         binding.outOfStockButton.isClickable = false
-        binding.finishOrderButton.isClickable = false
     }
 
     private fun enableControlButtons() {
         binding.nextButton.isEnabled = true
         binding.needsRestockingButton.isClickable = true
         binding.outOfStockButton.isClickable = true
-        binding.finishOrderButton.isClickable = true
+    }
+
+    private fun startAnimation() {
+        binding.submitProgressBar.visibility = View.VISIBLE
+        binding.submitTextView.visibility = View.VISIBLE
+    }
+
+    private fun stopAnimation() {
+        binding.submitProgressBar.visibility = View.GONE
+        binding.submitTextView.visibility = View.GONE
     }
 
     private fun popRestock() {
-        val intent = Intent(context, RestockDialogActivity::class.java)
+        val intent = Intent(context, RestockDialogActivity::class.java).apply {
+            putExtra("maxQuantity", stockListViewModel.currentItem.value!!.quantity)
+        }
         startActivityForResult(intent, RESTOCK_DIALOG_REQUEST_CODE)
     }
 
@@ -188,8 +197,16 @@ class StockListFragment : Fragment() {
 
     private fun popDateFormatError() {
         val intent = Intent(context, RetryDialogActivity::class.java).apply {
-            putExtra("dialogTitle", getString(R.string.date_formatting_error))
+            putExtra("dialogTitle", getString(R.string.date_formatting_error_message))
             putExtra("buttonTitle", getString(R.string.ignore))
+        }
+        startActivity(intent)
+    }
+
+    private fun popBarcodeConfirmError() {
+        val intent = Intent(context, RetryDialogActivity::class.java).apply {
+            putExtra("dialogTitle", getString(R.string.barcode_confirm_error_message))
+            putExtra("buttonTitle", getString(R.string.retry))
         }
         startActivity(intent)
     }
@@ -199,7 +216,28 @@ class StockListFragment : Fragment() {
         super.onActivityResult(requestCode, resultCode, data)
 
         when (requestCode) {
-            RESTOCK_DIALOG_REQUEST_CODE -> stockListViewModel.onRestockComplete()
+            STOCK_LIST_NEXT_SCAN_REQUEST_CODE -> {
+                val result = IntentIntegrator.parseActivityResult(resultCode, data)
+                stockListViewModel.onNextComplete(result)
+            }
+            STOCK_LIST_RESTOCK_SCAN_REQUEST_CODE -> {
+                val result = IntentIntegrator.parseActivityResult(resultCode, data)
+                if (stockListViewModel.confirmBarcodeFromScanResult(result)) {
+                    popRestock()
+                } else {
+                    stockListViewModel.onBarcodeConfirmError()
+                    stockListViewModel.onRestockComplete(null)
+                }
+            }
+
+            RESTOCK_DIALOG_REQUEST_CODE -> {
+                if (resultCode == Activity.RESULT_OK) {
+                    val quantity = data!!.extras!!["restockQuantity"] as Int
+                    stockListViewModel.onRestockComplete(quantity)
+                } else {
+                    stockListViewModel.onRestockComplete(null)
+                }
+            }
             OUT_OF_STOCK_DIALOG_REQUEST_CODE -> {
                 if (resultCode == Activity.RESULT_OK) {
                     stockListViewModel.onOutOfStockComplete(false)
