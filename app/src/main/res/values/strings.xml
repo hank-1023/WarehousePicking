@@ -11,7 +11,7 @@
     <string name="needs_restocking">缺货(2)</string>
     <string name="out_of_stock">短拣(3)</string>
     <string name="reset_order">重置订单(4)</string>
-    <string name="next_item">拣货(1)</string>
+    <string name="pick_item">拣货(1)</string>
     <string name="finish_order">完成订单(5)</string>
     <string name="order_number_edit_hint">请输入订单号</string>
     <string name="staff">员工:"    "</string>
@@ -44,6 +44,8 @@
     <string name="ignore">忽略</string>
     <string name="barcode_confirm_error_message">条码核对不正确，请重试</string>
     <string name="quantity_error_message">数量有误，请重新输入</string>
+    <string name="order_reloaded">已经为您重新加载订单</string>
+    <string name="next_item">下一个</string>
 
 
 </resources>

@@ -42,6 +42,11 @@ interface ApiService {
     suspend fun updateOrderItem(@Header("X-AUTH-TOKEN") authToken: String,
                                 @Path("stockID", encoded = false) stockID: String,
                                 @Body item: StockItem): Response<Void>
+
+    @POST("pPickDetialController/{taskID}")
+    suspend fun resetOrderToStatus(@Header("X-AUTH-TOKEN") authToken: String,
+                                   @Path("taskID", encoded = false) taskID: String,
+                                   @Query("statuts", encoded = false) status: String): Response<Void>
 }
 
 object GlobalApi {

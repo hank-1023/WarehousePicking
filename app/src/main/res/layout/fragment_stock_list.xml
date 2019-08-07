@@ -180,7 +180,7 @@
                         android:layout_marginEnd="51dp"/>
 
                 <Button
-                        android:text="@string/next_item"
+                        android:text="@string/pick_item"
                         android:onClick="@{() -> stockListViewModel.onNext()}"
                         style="@style/stock_list_item_action_button_style"
                         app:layout_constraintEnd_toStartOf="@+id/needsRestockingButton"

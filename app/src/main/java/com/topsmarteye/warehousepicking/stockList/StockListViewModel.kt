@@ -92,6 +92,10 @@ class StockListViewModel : ViewModel() {
     val eventBarcodeConfirmError: LiveData<Boolean>
         get() = _eventBarcodeConfirmError
 
+    private val _eventOrderReloaded = MutableLiveData<Boolean>()
+    val eventOrderReloaded: LiveData<Boolean>
+        get() = _eventOrderReloaded
+
     private var stockListJob: Job? = null
     private var stockListCoroutineScope: CoroutineScope? = null
 
@@ -122,13 +126,21 @@ class StockListViewModel : ViewModel() {
             try {
                 itemList = LoadOrderService
                     .loadOrderWithStatus(orderNumber, ItemStatus.NOTPICKED).toMutableList()
-                _orderNumber.value = orderNumber
-                _totalItems.value = itemList!!.size
-                _currentIndex.value = 0
-                _isLastItem.value = itemList!!.size <= 1
-                // update currentItem and nextItem
-                updateLiveDataWithIndex(0)
-                _inputFragmentApiStatus.value = ApiStatus.DONE
+                itemList!!.addAll(LoadOrderService
+                    .loadOrderWithStatus(orderNumber, ItemStatus.RESTOCK).toMutableList())
+
+                if (itemList!!.isNotEmpty()) {
+                    _orderNumber.value = orderNumber
+                    _totalItems.value = itemList!!.size
+                    _currentIndex.value = 0
+                    _isLastItem.value = itemList!!.size <= 1
+                    // update currentItem and nextItem
+                    updateLiveDataWithIndex(0)
+                    _inputFragmentApiStatus.value = ApiStatus.DONE
+                } else {
+                    Log.d("StockListViewModel", "loadStockList is empty")
+                    _inputFragmentApiStatus.value = ApiStatus.ERROR
+                }
             } catch (e: Exception) {
                 Log.d("StockListViewModel", "loadStockList error: ${e.message}")
                 _inputFragmentApiStatus.value = ApiStatus.ERROR
@@ -186,11 +198,11 @@ class StockListViewModel : ViewModel() {
         }
     }
 
-    private suspend fun checkRestockItems() {
-        val restockItems = stockListCoroutineScope!!.async {
-            LoadOrderService.loadOrderWithStatus(_orderNumber.value!!, ItemStatus.RESTOCK)
-        }
-    }
+//    private suspend fun checkRestockItems() {
+//        val restockItems = stockListCoroutineScope!!.async {
+//            LoadOrderService.loadOrderWithStatus(_orderNumber.value!!, ItemStatus.RESTOCK)
+//        }
+//    }
 
     // Called by xml to trigger action
     fun onNext() {
@@ -209,7 +221,7 @@ class StockListViewModel : ViewModel() {
         stockListCoroutineScope!!.launch {
 
             val currentItem = itemList!![currentIndex.value!!]
-            currentItem.status = ItemStatus.NOTPICKED.value
+            currentItem.status = ItemStatus.COMPLETE.value
             currentItem.pickQuantity = currentItem.quantity
 
             _listFragmentApiStatus.value = ApiStatus.LOADING
@@ -255,7 +267,7 @@ class StockListViewModel : ViewModel() {
 
         stockListCoroutineScope!!.launch {
             val currentItem = itemList!![currentIndex.value!!]
-            currentItem.status = ItemStatus.NOTPICKED.value
+            currentItem.status = ItemStatus.RESTOCK.value
             currentItem.restockQuantity = restockQuantity
 
             _listFragmentApiStatus.value = ApiStatus.LOADING
@@ -273,8 +285,6 @@ class StockListViewModel : ViewModel() {
         }
     }
 
-
-
     fun onOutOfStock() {
         // Prevent more than one dialog window popping up
         if (_eventRestock.value == false &&
@@ -287,13 +297,12 @@ class StockListViewModel : ViewModel() {
     fun onOutOfStockComplete(cancelled: Boolean) {
         _eventOutOfStock.value = false
 
-        if (cancelled) {
+        if (cancelled)
             return
-        }
 
         stockListCoroutineScope!!.launch {
             val currentItem = itemList!![currentIndex.value!!]
-            currentItem.status = ItemStatus.NOTPICKED.value
+            currentItem.status = ItemStatus.OUTOFSTOCK.value
             currentItem.outOfStockQuantity = currentItem.quantity
 
             _listFragmentApiStatus.value = ApiStatus.LOADING
@@ -319,9 +328,43 @@ class StockListViewModel : ViewModel() {
         }
     }
 
-    fun onResetOrderComplete() {
+    fun onResetOrderComplete(cancelled: Boolean) {
         _eventResetOrder.value = false
-        _listFragmentApiStatus.value = ApiStatus.NONE
+
+        if (cancelled)
+            return
+
+        stockListCoroutineScope!!.launch {
+            _listFragmentApiStatus.value = ApiStatus.LOADING
+
+            try {
+                UpdateItemService.resetOrder(_orderNumber.value!!)
+                reloadOrder()
+                _listFragmentApiStatus.value = ApiStatus.DONE
+            } catch (e: Exception) {
+                Log.d("StockListViewModel", "onResetOrderComplete exception: ${e.message}")
+                _listFragmentApiStatus.value = ApiStatus.ERROR
+            } finally {
+                _listFragmentApiStatus.value = ApiStatus.NONE
+            }
+        }
+
+    }
+
+    private suspend fun reloadOrder() {
+        itemList = LoadOrderService
+            .loadOrderWithStatus(_orderNumber.value!!, ItemStatus.NOTPICKED).toMutableList()
+
+        if (itemList!!.isNotEmpty()) {
+            _totalItems.value = itemList!!.size
+            _currentIndex.value = 0
+            _isLastItem.value = itemList!!.size <= 1
+            // update currentItem and nextItem
+            updateLiveDataWithIndex(0)
+            _eventOrderReloaded.value = true
+        } else {
+            throw Exception("reloadOrder failed, list is empty")
+        }
     }
 
     fun onFinishActivityComplete() {
@@ -351,6 +394,10 @@ class StockListViewModel : ViewModel() {
 
     fun onBarcodeConfirmErrorComplete() {
         _eventBarcodeConfirmError.value = false
+    }
+
+    fun onOrderReloadedComplete() {
+        _eventOrderReloaded.value = false
     }
 
 

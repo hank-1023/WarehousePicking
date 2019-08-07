@@ -55,6 +55,8 @@ class StockListFragment : Fragment() {
         stockListViewModel.isLastItem.observe(this, Observer { isLastItem ->
             if (isLastItem) {
                 binding.nextItemCardView.visibility = View.GONE
+            } else {
+                binding.nextItemCardView.visibility = View.VISIBLE
             }
         })
 
@@ -140,6 +142,13 @@ class StockListFragment : Fragment() {
                 popBarcodeConfirmError()
                 // Don't care about the result, so complete here
                 stockListViewModel.onBarcodeConfirmErrorComplete()
+            }
+        })
+
+        stockListViewModel.eventOrderReloaded.observe(this, Observer {
+            if (it) {
+                Toast.makeText(context, getString(R.string.order_reloaded), Toast.LENGTH_SHORT).show()
+                stockListViewModel.onOrderReloadedComplete()
             }
         })
     }
@@ -245,12 +254,13 @@ class StockListFragment : Fragment() {
                     stockListViewModel.onOutOfStockComplete(true)
                 }
             }
-            RESET_ORDER_DIALOG_REQUEST_CODE -> stockListViewModel.onResetOrderComplete()
-        }
-
-        when (resultCode) {
-            Activity.RESULT_CANCELED -> Toast.makeText(context, "cancelled", Toast.LENGTH_SHORT).show()
-            Activity.RESULT_OK -> Toast.makeText(context, "confirmed", Toast.LENGTH_SHORT).show()
+            RESET_ORDER_DIALOG_REQUEST_CODE -> {
+                if (resultCode == Activity.RESULT_OK) {
+                    stockListViewModel.onResetOrderComplete(false)
+                } else {
+                    stockListViewModel.onResetOrderComplete(true)
+                }
+            }
         }
     }
 

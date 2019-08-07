@@ -14,12 +14,12 @@ object LoadOrderService {
             .getOrderItems(LoginService.authToken!!, orderNumber, status.value)
 
         //update auth token if out-of-date
-        if (!response.isSuccessful && LoginService.updateAuthToken()) {
+        if (response.code() == 401 && LoginService.updateAuthToken()) {
             response = GlobalApi.retrofitService
                 .getOrderItems(LoginService.authToken!!, orderNumber, status.value)
         }
 
-        if (response.isSuccessful && !response.body()?.stockList.isNullOrEmpty()) {
+        if (response.isSuccessful && response.body()?.stockList != null) {
             itemList = response.body()?.stockList!!
         } else {
             throw Exception("loadOrderWithStatus failed to get response/list empty")
