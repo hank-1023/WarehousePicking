@@ -15,7 +15,7 @@ import java.lang.Exception
 class StockListViewModel : ViewModel() {
 
     /* When set to true: both keyboard and touch controls are disabled
-    both the activity and StockListViewModel will listen to this variable to get information
+     * both the activity and StockListViewModel will listen to this variable to get information
     */
     private val _eventDisableControl = MutableLiveData<Boolean>()
     val eventDisableControl: LiveData<Boolean>
@@ -44,8 +44,8 @@ class StockListViewModel : ViewModel() {
     val orderNumber: LiveData<String>
         get() = _orderNumber
 
-    // The live data field of stock item list
-    private var itemList: MutableList<StockItem>? = null
+    // The field of stock item list
+    private var itemList = mutableListOf<StockItem>()
 
     private val _currentIndex = MutableLiveData<Int>()
     val currentIndex: LiveData<Int>
@@ -122,22 +122,28 @@ class StockListViewModel : ViewModel() {
 
     //region Logic for InputAndScanFragment
 
-
+    // Only called once on InputAndScanFragment
+    // Will reset order for order number 26084
     fun loadStockList(orderNumber: String) {
         inputAndScanCoroutineScope.launch {
             _inputFragmentApiStatus.value = ApiStatus.LOADING
 
             try {
+                // Reset order every time before loading order: 26084
+                if (orderNumber == "26084") {
+                    UpdateItemService.resetOrder(orderNumber)
+                }
+
                 itemList = LoadOrderService
                     .loadOrderWithStatus(orderNumber, ItemStatus.NOTPICKED).toMutableList()
-                itemList!!.addAll(LoadOrderService
+                itemList.addAll(LoadOrderService
                     .loadOrderWithStatus(orderNumber, ItemStatus.RESTOCK).toMutableList())
 
-                if (itemList!!.isNotEmpty()) {
+                if (itemList.isNotEmpty()) {
                     _orderNumber.value = orderNumber
-                    _totalItems.value = itemList!!.size
+                    _totalItems.value = itemList.size
                     _currentIndex.value = 0
-                    _isLastItem.value = itemList!!.size <= 1
+                    _isLastItem.value = itemList.size <= 1
                     // update currentItem and nextItem
                     updateItemDataWithIndex(0)
                     _inputFragmentApiStatus.value = ApiStatus.DONE
@@ -180,7 +186,7 @@ class StockListViewModel : ViewModel() {
 
     // Update the mutable live data with the index passed in
     private fun updateItemDataWithIndex(index: Int) {
-        itemList!!.let {
+        itemList.let {
             _currentItem.value = it[index]
             if (index < it.size - 1) {
                 _nextItem.value = it[index + 1]
@@ -233,10 +239,10 @@ class StockListViewModel : ViewModel() {
         itemList = LoadOrderService
             .loadOrderWithStatus(_orderNumber.value!!, status).toMutableList()
 
-        return if (itemList!!.isNotEmpty()) {
-            _totalItems.value = itemList!!.size
+        return if (itemList.isNotEmpty()) {
+            _totalItems.value = itemList.size
             _currentIndex.value = 0
-            _isLastItem.value = itemList!!.size <= 1
+            _isLastItem.value = itemList.size <= 1
             true
         } else {
             false
@@ -252,14 +258,16 @@ class StockListViewModel : ViewModel() {
     fun onNextComplete(scanResult: IntentResult?) {
         _eventNext.value = false
 
-        if (!confirmBarcodeFromScanResult(scanResult)) {
+        if (scanResult == null) {
+            return
+        } else if (!confirmBarcodeFromScanResult(scanResult)) {
             _eventBarcodeConfirmError.value = true
             return
         }
 
         stockListCoroutineScope!!.launch {
 
-            val currentItem = itemList!![currentIndex.value!!]
+            val currentItem = itemList[currentIndex.value!!]
             currentItem.status = ItemStatus.COMPLETE.value
             currentItem.pickQuantity = currentItem.quantity
 
@@ -301,11 +309,11 @@ class StockListViewModel : ViewModel() {
     fun onRestockComplete(restockQuantity: Int?) {
         _eventRestock.value = false
 
-        // cancelled
+        // cancelled or barcode incorrect
         if (restockQuantity == null) {return}
 
         stockListCoroutineScope!!.launch {
-            val currentItem = itemList!![currentIndex.value!!]
+            val currentItem = itemList[currentIndex.value!!]
             currentItem.status = ItemStatus.RESTOCK.value
             currentItem.restockQuantity = restockQuantity
 
@@ -340,7 +348,7 @@ class StockListViewModel : ViewModel() {
             return
 
         stockListCoroutineScope!!.launch {
-            val currentItem = itemList!![currentIndex.value!!]
+            val currentItem = itemList[currentIndex.value!!]
             currentItem.status = ItemStatus.OUTOFSTOCK.value
             currentItem.outOfStockQuantity = currentItem.quantity
 

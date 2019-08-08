@@ -23,6 +23,7 @@ class RestockDialogActivity : AppCompatActivity() {
 
         binding = DataBindingUtil.setContentView(this, R.layout.dialog_restock)
         binding.lifecycleOwner = this
+        binding.quantityEditText.hint = getString(R.string.maximum_quantity_format, maxQuantity)
 
         binding.submitButton.setOnClickListener {
             onSubmit()

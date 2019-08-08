@@ -1,11 +1,11 @@
 package com.topsmarteye.warehousepicking
 
-import android.content.Context
+import android.content.Intent
 import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import com.google.zxing.integration.android.IntentIntegrator
+import com.topsmarteye.warehousepicking.dialog.RetryDialogActivity
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import org.joda.time.format.DateTimeFormat
@@ -49,18 +49,17 @@ fun String.formatToStandardDateString(): String? {
     }
 }
 
+fun Fragment.popRetryDialog(dialogTitle: String, buttonTitle: String) {
+    val intent = Intent(context, RetryDialogActivity::class.java).apply {
+        putExtra("dialogTitle", dialogTitle)
+        putExtra("buttonTitle", buttonTitle)
+    }
+    startActivity(intent)
+}
+
 fun getCurrentTimeString(): String {
     val dt = DateTime()
     return dt.toString()
-}
-
-// this only does basic initialization, request code should still be set separately
-fun Fragment.setupBarcodeIntegrator(): IntentIntegrator {
-    val integrator = IntentIntegrator.forSupportFragment(this)
-    integrator.setDesiredBarcodeFormats(IntentIntegrator.ONE_D_CODE_TYPES)
-    integrator.setPrompt(getString(R.string.please_scan_barcode))
-
-    return integrator
 }
 
 

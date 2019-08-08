@@ -93,7 +93,7 @@ class StockListActivity : AppCompatActivity() {
         }
 
         binding.upButton.setOnClickListener {
-            onUpButtonPressed()
+            onBackPressed()
         }
 
         stockListViewModel.currentIndex.observe(this, Observer {
@@ -136,11 +136,11 @@ class StockListActivity : AppCompatActivity() {
         }
     }
 
-    private fun onUpButtonPressed() {
-        if (isStart) {
-            finish()
-        } else {
-            navController.navigateUp()
+    override fun onBackPressed() {
+        super.onBackPressed()
+
+        if (!isStart) {
+            // cancel the job for stockList
             stockListViewModel.onNavigateToInput()
         }
     }

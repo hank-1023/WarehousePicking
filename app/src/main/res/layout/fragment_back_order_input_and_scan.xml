@@ -16,7 +16,7 @@
                 android:text="@string/order_number"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/orderNumberLabel"
+                android:id="@+id/orderIDLabel"
                 style="@style/order_number_textview_style"
                 app:layout_constraintStart_toStartOf="parent"
                 android:layout_marginStart="47dp"
@@ -28,9 +28,9 @@
                 android:id="@+id/orderIDEditText"
                 style="@style/input_and_scan_edit_text_style"
                 android:hint="@string/order_number_edit_hint"
-                app:layout_constraintStart_toEndOf="@+id/orderNumberLabel"
+                app:layout_constraintStart_toEndOf="@+id/orderIDLabel"
                 android:layout_marginStart="20dp"
-                app:layout_constraintBaseline_toBaselineOf="@+id/orderNumberLabel"
+                app:layout_constraintBaseline_toBaselineOf="@+id/orderIDLabel"
                 app:layout_constraintEnd_toEndOf="parent"
                 android:layout_marginEnd="52dp">
 
@@ -54,8 +54,9 @@
                 style="@style/input_and_scan_edit_text_style"
                 app:layout_constraintStart_toStartOf="@+id/orderIDEditText"
                 app:layout_constraintEnd_toEndOf="@+id/orderIDEditText"
-                app:layout_constraintBaseline_toBaselineOf="@+id/stockNumberLabel"
-                android:hint="@string/stock_number_edit_text_hint"/>
+                app:layout_constraintBaseline_toBaselineOf="@+id/stockIDLabel"
+                android:hint="@string/stock_barcode_edit_text_hind"
+                android:visibility="gone"/>
 
         <ImageButton
                 android:layout_width="50dp"
@@ -66,18 +67,19 @@
                 app:layout_constraintTop_toTopOf="@+id/stockIDEditText"
                 app:layout_constraintBottom_toBottomOf="@+id/stockIDEditText"
                 app:layout_constraintEnd_toEndOf="@+id/stockIDEditText"
-                />
+                android:visibility="gone"/>
 
         <TextView
-                android:text="@string/stock_number"
+                android:text="@string/stock_barcode"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/stockNumberLabel"
+                android:id="@+id/stockIDLabel"
                 style="@style/order_number_textview_style"
-                app:layout_constraintTop_toBottomOf="@+id/orderNumberLabel"
+                app:layout_constraintTop_toBottomOf="@+id/orderIDLabel"
                 android:layout_marginTop="31dp"
-                app:layout_constraintEnd_toEndOf="@+id/orderNumberLabel"
-                app:layout_constraintStart_toStartOf="@+id/orderNumberLabel"/>
+                app:layout_constraintEnd_toEndOf="@+id/orderIDLabel"
+                app:layout_constraintStart_toStartOf="@+id/orderIDLabel"
+                android:visibility="gone"/>
 
         <ProgressBar
                 style="?android:attr/progressBarStyle"
@@ -88,13 +90,6 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="@+id/orderIDScanButton"
                 app:layout_constraintBottom_toBottomOf="@+id/orderIDScanButton"
-                android:visibility="gone"/>
-
-        <androidx.constraintlayout.widget.Group
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/stockIDGroup"
-                app:constraint_referenced_ids="stockNumberLabel,stockIDEditText,stockIDScanButton"
                 android:visibility="gone"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>

@@ -49,7 +49,7 @@ interface ApiService {
                                    @Query("statuts", encoded = false) status: String): Response<Void>
 }
 
-object GlobalApi {
+object RetrofitApi {
     val retrofitService: ApiService by lazy {
         retrofit.create(ApiService::class.java)
     }

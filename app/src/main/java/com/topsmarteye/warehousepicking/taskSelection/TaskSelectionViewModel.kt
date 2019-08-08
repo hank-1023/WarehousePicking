@@ -1,11 +1,13 @@
 package com.topsmarteye.warehousepicking.taskSelection
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.topsmarteye.warehousepicking.network.ApiStatus
 import com.topsmarteye.warehousepicking.network.networkServices.LoginService
 import kotlinx.coroutines.*
+import java.lang.Exception
 
 
 class TaskSelectionViewModel : ViewModel() {
@@ -26,13 +28,25 @@ class TaskSelectionViewModel : ViewModel() {
     fun getTokenAndLogin(username: String, password: Int) {
         _apiStatus.value = ApiStatus.LOADING
         coroutineScope.launch {
-            val tokenResultSuccessful = LoginService.updateAuthToken()
-            //check if token is got and check if successfully got userdata
-            if (tokenResultSuccessful && LoginService.loginUser(username, password)) {
+
+            try {
+                LoginService.updateAuthToken()
+                LoginService.loginUser(username, password)
                 _apiStatus.value = ApiStatus.DONE
-            } else {
+            } catch (e: Exception) {
+                Log.d("TaskSelectionViewModel", "getTokenAndLogin failed ${e.message}")
                 _apiStatus.value = ApiStatus.ERROR
+            } finally {
+                _apiStatus.value = ApiStatus.NONE
             }
+
+//            val tokenResultSuccessful = LoginService.updateAuthToken()
+//            //check if token is got and check if successfully got userdata
+//            if (tokenResultSuccessful && LoginService.loginUser(username, password)) {
+//                _apiStatus.value = ApiStatus.DONE
+//            } else {
+//                _apiStatus.value = ApiStatus.ERROR
+//            }
         }
     }
 

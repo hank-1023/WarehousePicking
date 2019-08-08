@@ -1,6 +1,6 @@
 package com.topsmarteye.warehousepicking.network.networkServices
 
-import com.topsmarteye.warehousepicking.network.GlobalApi
+import com.topsmarteye.warehousepicking.network.RetrofitApi
 import com.topsmarteye.warehousepicking.network.ItemStatus
 import com.topsmarteye.warehousepicking.network.StockItem
 import java.lang.Exception
@@ -10,12 +10,14 @@ object LoadOrderService {
     suspend fun loadOrderWithStatus(orderNumber: String, status: ItemStatus): List<StockItem> {
         val itemList: List<StockItem>
 
-        var response = GlobalApi.retrofitService
+        var response = RetrofitApi.retrofitService
             .getOrderItems(LoginService.authToken!!, orderNumber, status.value)
 
         //update auth token if out-of-date
-        if (response.code() == 401 && LoginService.updateAuthToken()) {
-            response = GlobalApi.retrofitService
+        if (response.code() == 401) {
+            // May throw a exception, should be handled by caller
+            LoginService.updateAuthToken()
+            response = RetrofitApi.retrofitService
                 .getOrderItems(LoginService.authToken!!, orderNumber, status.value)
         }
 
@@ -27,21 +29,5 @@ object LoadOrderService {
 
         return itemList
     }
-
-
-//    suspend fun resetOrderItems(items: List<StockItem>): List<StockItem> {
-//        if (items.isEmpty()) { return listOf() }
-//
-//        val result = mutableListOf<StockItem>()
-//
-//        withContext(Dispatchers.IO) {
-//            for (item in items) {
-//                item.status = ItemStatus.NOTPICKED.value
-//                item.finishTime = null
-//                result.add(item)
-//            }
-//        }
-//        return result
-//    }
 
 }

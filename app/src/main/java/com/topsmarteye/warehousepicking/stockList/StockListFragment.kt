@@ -34,7 +34,7 @@ class StockListFragment : Fragment() {
             ViewModelProviders.of(this).get(StockListViewModel::class.java)
         } ?: throw Exception("Invalid Activity")
 
-        integrator = setupBarcodeIntegrator()
+        setupBarcodeIntegrator()
 
     }
 
@@ -56,6 +56,12 @@ class StockListFragment : Fragment() {
         binding.nameTextView.isSelected = true
     }
 
+    private fun setupBarcodeIntegrator() {
+        integrator = IntentIntegrator.forSupportFragment(this)
+        integrator.setDesiredBarcodeFormats(IntentIntegrator.ONE_D_CODE_TYPES)
+        integrator.setPrompt(getString(R.string.please_scan_stock_barcode))
+    }
+
     private fun setupListeners() {
 
         stockListViewModel.isLastItem.observe(viewLifecycleOwner, Observer { isLastItem ->
@@ -67,7 +73,6 @@ class StockListFragment : Fragment() {
         })
 
         // Doesn't need to think about clickable, since keyboard will be disabled when appropriate
-
         stockListViewModel.eventNext.observe(viewLifecycleOwner, Observer {
             if (it) {
                 binding.nextButton.requestFocus()
@@ -119,7 +124,7 @@ class StockListFragment : Fragment() {
 
         stockListViewModel.eventDateFormatError.observe(viewLifecycleOwner, Observer {
             if (it != null) {
-                popDateFormatError()
+                popRetryDialog(getString(R.string.date_formatting_error_message), getString(R.string.ignore))
                 stockListViewModel.onDateFormatErrorComplete()
             }
         })
@@ -131,7 +136,7 @@ class StockListFragment : Fragment() {
                     stockListViewModel.onDisableControl()
                 }
                 ApiStatus.ERROR -> {
-                    popUpdateError()
+                    popRetryDialog(getString(R.string.network_error_message), getString(R.string.retry))
                 }
                 ApiStatus.DONE -> {
                     return@Observer
@@ -145,7 +150,7 @@ class StockListFragment : Fragment() {
 
         stockListViewModel.eventBarcodeConfirmError.observe(viewLifecycleOwner, Observer {
             if (it) {
-                popBarcodeConfirmError()
+                popRetryDialog(getString(R.string.barcode_confirm_error_message), getString(R.string.retry))
                 // Don't care about the result, so complete here
                 stockListViewModel.onBarcodeConfirmErrorComplete()
             }
@@ -209,40 +214,26 @@ class StockListFragment : Fragment() {
         startActivityForResult(intent, RESET_ORDER_DIALOG_REQUEST_CODE)
     }
 
-    private fun popUpdateError() {
-        val intent = Intent(context, RetryDialogActivity::class.java).apply {
-            putExtra("dialogTitle", getString(R.string.network_error_message))
-            putExtra("buttonTitle", getString(R.string.retry))
-        }
-        startActivity(intent)
-    }
-
-    private fun popDateFormatError() {
-        val intent = Intent(context, RetryDialogActivity::class.java).apply {
-            putExtra("dialogTitle", getString(R.string.date_formatting_error_message))
-            putExtra("buttonTitle", getString(R.string.ignore))
-        }
-        startActivity(intent)
-    }
-
-    private fun popBarcodeConfirmError() {
-        val intent = Intent(context, RetryDialogActivity::class.java).apply {
-            putExtra("dialogTitle", getString(R.string.barcode_confirm_error_message))
-            putExtra("buttonTitle", getString(R.string.retry))
-        }
-        startActivity(intent)
-    }
-
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
         when (requestCode) {
             STOCK_LIST_NEXT_SCAN_REQUEST_CODE -> {
+                // If scan activity is cancelled
+                if (resultCode == Activity.RESULT_CANCELED) {
+                    stockListViewModel.onNextComplete(null)
+                    return
+                }
                 val result = IntentIntegrator.parseActivityResult(resultCode, data)
                 stockListViewModel.onNextComplete(result)
             }
             STOCK_LIST_RESTOCK_SCAN_REQUEST_CODE -> {
+                // If scan activity is cancelled
+                if (resultCode == Activity.RESULT_CANCELED) {
+                    stockListViewModel.onRestockComplete(null)
+                    return
+                }
                 val result = IntentIntegrator.parseActivityResult(resultCode, data)
                 if (stockListViewModel.confirmBarcodeFromScanResult(result)) {
                     popRestock()

@@ -10,7 +10,7 @@
     <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            app:layout_constraintBaseline_toBaselineOf="@+id/orderNumberLabel"
+            app:layout_constraintBaseline_toBaselineOf="@+id/orderIDLabel"
             android:background="@color/grey_layout_background_color">
 
 
@@ -25,7 +25,7 @@
         <TextView
                 android:layout_width="wrap_content"
                 android:text="@string/order_number"
-                android:id="@+id/orderNumberLabel"
+                android:id="@+id/orderIDLabel"
                 app:layout_constraintTop_toTopOf="@+id/orderNumberImageView"
                 app:layout_constraintBottom_toBottomOf="@+id/orderNumberImageView"
                 app:layout_constraintStart_toEndOf="@+id/orderNumberImageView"
@@ -36,9 +36,9 @@
         <EditText
                 android:layout_width="0dp"
                 android:id="@+id/orderIDEditText"
-                app:layout_constraintStart_toEndOf="@+id/orderNumberLabel"
+                app:layout_constraintStart_toEndOf="@+id/orderIDLabel"
                 android:layout_marginStart="13dp"
-                app:layout_constraintBaseline_toBaselineOf="@+id/orderNumberLabel"
+                app:layout_constraintBaseline_toBaselineOf="@+id/orderIDLabel"
                 app:layout_constraintEnd_toEndOf="parent"
                 android:layout_marginEnd="52dp"
                 android:hint="@string/order_number_edit_hint"

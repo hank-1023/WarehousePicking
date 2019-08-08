@@ -31,11 +31,10 @@ class BackOrderActivity : AppCompatActivity() {
         }
 
         binding.upButton.setOnClickListener {
-            onUpButtonPressed()
+            onBackPressed()
         }
 
     }
-
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         if (isStart && keyCode == KeyEvent.KEYCODE_STAR) {
@@ -52,12 +51,4 @@ class BackOrderActivity : AppCompatActivity() {
         hideSystemUI()
     }
 
-
-    private fun onUpButtonPressed() {
-        if (isStart) {
-            finish()
-        } else {
-            navController.navigateUp()
-        }
-    }
 }

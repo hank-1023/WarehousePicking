@@ -12,9 +12,8 @@ import androidx.navigation.fragment.findNavController
 import com.google.zxing.integration.android.IntentIntegrator
 import com.topsmarteye.warehousepicking.R
 import com.topsmarteye.warehousepicking.databinding.FragmentStockListInputAndScanBinding
-import com.topsmarteye.warehousepicking.dialog.RetryDialogActivity
 import com.topsmarteye.warehousepicking.network.ApiStatus
-import com.topsmarteye.warehousepicking.setupBarcodeIntegrator
+import com.topsmarteye.warehousepicking.popRetryDialog
 
 
 class StockListInputAndScanFragment : Fragment() {
@@ -29,7 +28,7 @@ class StockListInputAndScanFragment : Fragment() {
             ViewModelProviders.of(this).get(StockListViewModel::class.java)
         } ?: throw Exception("Invalid Activity")
 
-        integrator = setupBarcodeIntegrator()
+        setupBarcodeIntegrator()
 
     }
 
@@ -42,6 +41,12 @@ class StockListInputAndScanFragment : Fragment() {
         setupViewListeners()
 
         return binding.root
+    }
+
+    private fun setupBarcodeIntegrator() {
+        integrator = IntentIntegrator.forSupportFragment(this)
+        integrator.setDesiredBarcodeFormats(IntentIntegrator.ONE_D_CODE_TYPES)
+        integrator.setPrompt(getString(R.string.please_scan_order_barcode))
     }
 
     private fun setupViewModelListeners() {
@@ -66,7 +71,7 @@ class StockListInputAndScanFragment : Fragment() {
                 ApiStatus.ERROR -> {
                     stopLoadingAnimation()
                     enableInteraction()
-                    popDialogWithMessage(getString(R.string.get_order_error_message))
+                    popRetryDialog(getString(R.string.get_order_error_message), getString(R.string.retry))
                 }
                 else -> return@Observer
             }
@@ -120,15 +125,6 @@ class StockListInputAndScanFragment : Fragment() {
             }
         }
     }
-
-    private fun popDialogWithMessage(message: String) {
-        val intent = Intent(context, RetryDialogActivity::class.java).apply {
-            putExtra("dialogTitle", message)
-            putExtra("buttonTitle", getString(R.string.retry))
-        }
-        startActivity(intent)
-    }
-
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         val result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data)

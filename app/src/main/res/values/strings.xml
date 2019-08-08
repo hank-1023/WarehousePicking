@@ -27,14 +27,14 @@
     <string name="yes">是(2)</string>
     <string name="no">否(1)</string>
     <string name="quantity_to_restock">缺货数量</string>
-    <string name="quantity_edit_text_hint">输入数量</string>
     <string name="submit">提交(#)</string>
-    <string name="stock_number_edit_text_hint">请输入物料号</string>
-    <string name="stock_number">物料号</string>
-    <string name="please_scan_barcode">请扫描条码</string>
+    <string name="stock_barcode_edit_text_hind">请输入物料条码</string>
+    <string name="stock_barcode">物料条码</string>
+    <string name="please_scan_order_barcode">请扫描订单条码</string>
+    <string name="please_scan_stock_barcode">请扫描物料条码</string>
     <string name="relogin">重新登录</string>
     <string name="retry">重试</string>
-    <string name="network_error_message">网络异常，请检查网络</string>
+    <string name="network_error_message">网络异常，请重试</string>
     <string name="qrcode_error_message">登陆信息有误，请重试</string>
     <string name="logging_in">登陆中</string>
     <string name="get_order_error_message">获取订单失败，请检查后重试</string>
@@ -47,6 +47,8 @@
     <string name="order_reloaded">已经为您重新加载订单</string>
     <string name="next_item">下一个</string>
     <string name="done_adding_restock_items">已重新添加缺货物料</string>
+    <string name="maximum_quantity_format">"数量（最大：%1$d）"</string>
+    <string name="stock_barcode_not_found_message">该订单无此物料</string>
 
 
 </resources>
