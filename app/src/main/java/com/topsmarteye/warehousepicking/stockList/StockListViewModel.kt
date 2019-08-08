@@ -99,14 +99,16 @@ class StockListViewModel : ViewModel() {
     val eventOrderReloaded: LiveData<Boolean>
         get() = _eventOrderReloaded
 
+    private val _eventRestockItemsAdded = MutableLiveData<Boolean>()
+    val eventRestockItemsAdded: LiveData<Boolean>
+        get() = _eventRestockItemsAdded
+
     private var stockListJob: Job? = null
     private var stockListCoroutineScope: CoroutineScope? = null
 
     private val _listFragmentApiStatus = MutableLiveData<ApiStatus>()
     val listFragmentApiStatus: LiveData<ApiStatus>
         get() = _listFragmentApiStatus
-
-
 
 
     init {
@@ -122,27 +124,22 @@ class StockListViewModel : ViewModel() {
 
 
     fun loadStockList(orderNumber: String) {
-        Log.d("orderIDEditText", "loadStockList triggered")
         inputAndScanCoroutineScope.launch {
-            Log.d("orderIDEditText", "scope launched triggered")
-
             _inputFragmentApiStatus.value = ApiStatus.LOADING
 
             try {
-                Log.d("orderIDEditText", "inside try")
                 itemList = LoadOrderService
                     .loadOrderWithStatus(orderNumber, ItemStatus.NOTPICKED).toMutableList()
                 itemList!!.addAll(LoadOrderService
                     .loadOrderWithStatus(orderNumber, ItemStatus.RESTOCK).toMutableList())
 
                 if (itemList!!.isNotEmpty()) {
-                    Log.d("orderIDEditText", "inside itemNotEmpty")
                     _orderNumber.value = orderNumber
                     _totalItems.value = itemList!!.size
                     _currentIndex.value = 0
                     _isLastItem.value = itemList!!.size <= 1
                     // update currentItem and nextItem
-                    updateLiveDataWithIndex(0)
+                    updateItemDataWithIndex(0)
                     _inputFragmentApiStatus.value = ApiStatus.DONE
                 } else {
                     Log.d("StockListViewModel", "loadStockList is empty")
@@ -182,10 +179,9 @@ class StockListViewModel : ViewModel() {
     //region Logic for StockListFragment
 
     // Update the mutable live data with the index passed in
-    private fun updateLiveDataWithIndex(index: Int) {
+    private fun updateItemDataWithIndex(index: Int) {
         itemList!!.let {
             _currentItem.value = it[index]
-
             if (index < it.size - 1) {
                 _nextItem.value = it[index + 1]
             } else {
@@ -197,19 +193,55 @@ class StockListViewModel : ViewModel() {
 
     private fun updateViewToNext() {
         if (isLastItem.value!!) {
-            // Finish the activity if is last item
-            _eventFinishActivity.value = true
+            checkForRestockItems()
         } else {
             _currentIndex.value = _currentIndex.value!! + 1
-            updateLiveDataWithIndex(_currentIndex.value!!)
+            updateItemDataWithIndex(_currentIndex.value!!)
         }
     }
 
-//    private suspend fun checkRestockItems() {
-//        val restockItems = stockListCoroutineScope!!.async {
-//            LoadOrderService.loadOrderWithStatus(_orderNumber.value!!, ItemStatus.RESTOCK)
-//        }
-//    }
+    // Helper function for updateViewToNext()
+    // Will finish activity if no extra items are returned
+    // Otherwise will update the view for new items
+    private fun checkForRestockItems() {
+        stockListCoroutineScope!!.launch {
+            _listFragmentApiStatus.value = ApiStatus.LOADING
+            try {
+                val reloadListResult = reloadListForStatus(ItemStatus.RESTOCK)
+
+                if (reloadListResult) {
+                    updateItemDataWithIndex(0)
+                    _eventRestockItemsAdded.value = true
+                } else {
+                    // List is empty, finish activity
+                    _eventFinishActivity.value = true
+                }
+                _listFragmentApiStatus.value = ApiStatus.DONE
+            } catch (e: Exception) {
+                Log.d(
+                    "StockListViewModel",
+                    "checkForRemainingItemsOrFinish exception: ${e.message}"
+                )
+                _listFragmentApiStatus.value = ApiStatus.ERROR
+            } finally {
+                _listFragmentApiStatus.value = ApiStatus.NONE
+            }
+        }
+    }
+
+    private suspend fun reloadListForStatus(status: ItemStatus): Boolean {
+        itemList = LoadOrderService
+            .loadOrderWithStatus(_orderNumber.value!!, status).toMutableList()
+
+        return if (itemList!!.isNotEmpty()) {
+            _totalItems.value = itemList!!.size
+            _currentIndex.value = 0
+            _isLastItem.value = itemList!!.size <= 1
+            true
+        } else {
+            false
+        }
+    }
 
     // Called by xml to trigger action
     fun onNext() {
@@ -346,8 +378,15 @@ class StockListViewModel : ViewModel() {
 
             try {
                 UpdateItemService.resetOrder(_orderNumber.value!!)
-                reloadOrder()
-                _listFragmentApiStatus.value = ApiStatus.DONE
+                val reloadResult = reloadListForStatus(ItemStatus.NOTPICKED)
+
+                if (reloadResult) {
+                    updateItemDataWithIndex(0)
+                    _eventOrderReloaded.value = true
+                    _listFragmentApiStatus.value = ApiStatus.DONE
+                } else {
+                    throw Exception("reloadListForStatus failed: List empty")
+                }
             } catch (e: Exception) {
                 Log.d("StockListViewModel", "onResetOrderComplete exception: ${e.message}")
                 _listFragmentApiStatus.value = ApiStatus.ERROR
@@ -356,22 +395,6 @@ class StockListViewModel : ViewModel() {
             }
         }
 
-    }
-
-    private suspend fun reloadOrder() {
-        itemList = LoadOrderService
-            .loadOrderWithStatus(_orderNumber.value!!, ItemStatus.NOTPICKED).toMutableList()
-
-        if (itemList!!.isNotEmpty()) {
-            _totalItems.value = itemList!!.size
-            _currentIndex.value = 0
-            _isLastItem.value = itemList!!.size <= 1
-            // update currentItem and nextItem
-            updateLiveDataWithIndex(0)
-            _eventOrderReloaded.value = true
-        } else {
-            throw Exception("reloadOrder failed, list is empty")
-        }
     }
 
     fun onFinishActivityComplete() {
@@ -405,6 +428,10 @@ class StockListViewModel : ViewModel() {
 
     fun onOrderReloadedComplete() {
         _eventOrderReloaded.value = false
+    }
+
+    fun onRestockItemsAddedComplete() {
+        _eventRestockItemsAdded.value = false
     }
 
 

@@ -40,9 +40,6 @@ class BackOrderInputAndScanFragment : Fragment() {
             R.layout.fragment_back_order_input_and_scan, container, false)
         binding.lifecycleOwner = this
 
-
-        binding.stockIDGroup.visibility = View.GONE
-
         setListeners()
 
         return binding.root
@@ -69,9 +66,9 @@ class BackOrderInputAndScanFragment : Fragment() {
                 false
             } else if (i == EditorInfo.IME_ACTION_DONE
                 || (keyEvent.action == KeyEvent.ACTION_DOWN && keyEvent.keyCode == KeyEvent.KEYCODE_ENTER)) {
-                viewModel.onSetOrderNumber(textView.text.toString())
+                viewModel.setOrderNumber(textView.text.toString())
                 viewModel.onOrderIDEditComplete()
-                true
+                false
             } else {
                 false
             }
@@ -99,13 +96,15 @@ class BackOrderInputAndScanFragment : Fragment() {
         viewModel.eventOrderIDEdit.observe(viewLifecycleOwner, Observer {
             if (it) {
                 binding.stockIDGroup.visibility = View.GONE
+                binding.stockIDEditText.text.clear()
             }
         })
 
         viewModel.eventLoadOrderSuccess.observe(viewLifecycleOwner, Observer {
             if (it) {
-                binding.stockIDEditText.text.clear()
                 binding.stockIDGroup.visibility = View.VISIBLE
+                // change focus to stockIDEditText
+                binding.stockIDEditText.requestFocus()
                 viewModel.onLoadOrderSuccessComplete()
             }
         })
@@ -134,13 +133,13 @@ class BackOrderInputAndScanFragment : Fragment() {
             BACK_ORDER_ORDER_NUMBER_SCAN_REQUEST_CODE -> {
                 binding.orderIDEditText.setText(result.contents)
                 binding.stockIDEditText.requestFocus()
-                viewModel.onSetOrderNumber(result.contents)
+                viewModel.setOrderNumber(result.contents)
                 viewModel.onOrderIDEditComplete()
             }
             BACK_ORDER_STOCK_NUMBER_SCAN_REQUEST_CODE -> {
                 binding.stockIDEditText.setText(result.contents)
                 binding.stockIDEditText.requestFocus()
-                viewModel.onSetStockNumber(result.contents)
+                viewModel.setStockNumber(result.contents)
                 viewModel.onStockIDScanEditComplete()
             }
         }

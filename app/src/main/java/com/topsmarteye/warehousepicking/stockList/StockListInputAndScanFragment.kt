@@ -2,7 +2,6 @@ package com.topsmarteye.warehousepicking.stockList
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.*
 import android.view.inputmethod.EditorInfo
 import androidx.databinding.DataBindingUtil
@@ -110,15 +109,12 @@ class StockListInputAndScanFragment : Fragment() {
 
 
         binding.orderIDEditText.setOnEditorActionListener { textView, i, keyEvent ->
-            Log.d("orderIDEditText", "$i")
-
-
             if (textView.text.isNullOrEmpty()) {
                 false
             } else if (i == EditorInfo.IME_ACTION_DONE ||
                 (keyEvent.action == KeyEvent.ACTION_DOWN && keyEvent.keyCode == KeyEvent.KEYCODE_ENTER)) {
                 viewModel.loadStockList(textView.text.toString())
-                true
+                false
             } else {
                 false
             }

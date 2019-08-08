@@ -46,6 +46,7 @@
     <string name="quantity_error_message">数量有误，请重新输入</string>
     <string name="order_reloaded">已经为您重新加载订单</string>
     <string name="next_item">下一个</string>
+    <string name="done_adding_restock_items">已重新添加缺货物料</string>
 
 
 </resources>

@@ -34,11 +34,11 @@ class BackOrderViewModel : ViewModel() {
     }
 
 
-    fun onSetOrderNumber(orderNumber: String) {
+    fun setOrderNumber(orderNumber: String) {
         _orderID.value = orderNumber
     }
 
-    fun onSetStockNumber(stockNumber: String) {
+    fun setStockNumber(stockNumber: String) {
         _stockID.value = stockNumber
     }
 
