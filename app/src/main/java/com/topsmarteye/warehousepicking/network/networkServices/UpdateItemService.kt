@@ -10,10 +10,11 @@ import java.lang.Exception
 object UpdateItemService {
 
     // Only handles dates, item should be prepared before passed in
-    suspend fun putItem(item: StockItem, itemCompleted: Boolean) {
+    suspend fun updateItem(item: StockItem, status: ItemStatus) {
+        item.status = status.value
         item.updateDate = getCurrentTimeString()
 
-        if (itemCompleted) {
+        if (status == ItemStatus.COMPLETE) {
             // item finished
             item.finishTime = getCurrentTimeString()
         } else {
@@ -47,7 +48,7 @@ object UpdateItemService {
         }
 
         if (!response.isSuccessful) {
-            throw Exception("putItem error: ${response.message()}")
+            throw Exception("updateItem error: ${response.message()}")
         }
 
     }

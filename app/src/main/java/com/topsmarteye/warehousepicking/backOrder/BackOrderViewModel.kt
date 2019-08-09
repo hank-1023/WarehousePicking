@@ -14,7 +14,7 @@ import java.lang.Exception
 
 class BackOrderViewModel : ViewModel() {
 
-    private val itemMap = mutableMapOf<String, StockItem>()
+    private var itemMap: Map<String, StockItem>? = null
 
     private val _orderID = MutableLiveData<String>()
     val orderID: LiveData<String>
@@ -88,9 +88,11 @@ class BackOrderViewModel : ViewModel() {
                     throw Exception("setOrderNumber: itemList is empty")
                 }
                 withContext(Dispatchers.IO) {
+                    val map = mutableMapOf<String, StockItem>()
                     itemList.forEach {
-                        it.stockBarcode?.let { barcode -> itemMap[barcode] = it }
+                        it.stockBarcode?.let { barcode -> map[barcode] = it }
                     }
+                    itemMap = map.toMap()
                 }
                 _inputApiStatus.value = ApiStatus.DONE
                 _eventLoadOrderSuccess.value = true
@@ -108,8 +110,8 @@ class BackOrderViewModel : ViewModel() {
         _stockBarcode.value = stockBarcode
 
         coroutineScope.launch {
-            if (itemMap.containsKey(stockBarcode)){
-                _itemToRestock.value = itemMap[stockBarcode]
+            if (itemMap!!.containsKey(stockBarcode)){
+                _itemToRestock.value = itemMap!![stockBarcode]
                 _eventNavigateToSubmit.value = true
             } else {
                 _eventStockBarcodeNotFound.value = true
@@ -149,11 +151,10 @@ class BackOrderViewModel : ViewModel() {
         coroutineScope.launch {
             val item = _itemToRestock.value!!
             item.restockQuantity = quantity
-            item.status = ItemStatus.RESTOCK.value
 
             _submitApiStatus.value = ApiStatus.LOADING
             try {
-                UpdateItemService.putItem(item, false)
+                UpdateItemService.updateItem(item, ItemStatus.RESTOCK)
                 _submitApiStatus.value = ApiStatus.DONE
                 _eventFinishActivity.value = true
             } catch (e: Exception) {

@@ -45,7 +45,7 @@ class StockListViewModel : ViewModel() {
         get() = _orderNumber
 
     // The field of stock item list
-    private var itemList = mutableListOf<StockItem>()
+    private var itemList: List<StockItem>? = null
 
     private val _currentIndex = MutableLiveData<Int>()
     val currentIndex: LiveData<Int>
@@ -134,16 +134,18 @@ class StockListViewModel : ViewModel() {
                     UpdateItemService.resetOrder(orderNumber)
                 }
 
-                itemList = LoadOrderService
+                val loadedList = LoadOrderService
                     .loadOrderWithStatus(orderNumber, ItemStatus.NOTPICKED).toMutableList()
-                itemList.addAll(LoadOrderService
-                    .loadOrderWithStatus(orderNumber, ItemStatus.RESTOCK).toMutableList())
+                loadedList.addAll(LoadOrderService
+                    .loadOrderWithStatus(orderNumber, ItemStatus.RESTOCK))
 
-                if (itemList.isNotEmpty()) {
+                itemList = loadedList.toList()
+
+                if (itemList!!.isNotEmpty()) {
                     _orderNumber.value = orderNumber
-                    _totalItems.value = itemList.size
+                    _totalItems.value = itemList!!.size
                     _currentIndex.value = 0
-                    _isLastItem.value = itemList.size <= 1
+                    _isLastItem.value = itemList!!.size <= 1
                     // update currentItem and nextItem
                     updateItemDataWithIndex(0)
                     _inputFragmentApiStatus.value = ApiStatus.DONE
@@ -186,7 +188,7 @@ class StockListViewModel : ViewModel() {
 
     // Update the mutable live data with the index passed in
     private fun updateItemDataWithIndex(index: Int) {
-        itemList.let {
+        itemList!!.let {
             _currentItem.value = it[index]
             if (index < it.size - 1) {
                 _nextItem.value = it[index + 1]
@@ -236,13 +238,12 @@ class StockListViewModel : ViewModel() {
     }
 
     private suspend fun reloadListForStatus(status: ItemStatus): Boolean {
-        itemList = LoadOrderService
-            .loadOrderWithStatus(_orderNumber.value!!, status).toMutableList()
+        itemList = LoadOrderService.loadOrderWithStatus(_orderNumber.value!!, status)
 
-        return if (itemList.isNotEmpty()) {
-            _totalItems.value = itemList.size
+        return if (itemList!!.isNotEmpty()) {
+            _totalItems.value = itemList!!.size
             _currentIndex.value = 0
-            _isLastItem.value = itemList.size <= 1
+            _isLastItem.value = itemList!!.size <= 1
             true
         } else {
             false
@@ -267,14 +268,13 @@ class StockListViewModel : ViewModel() {
 
         stockListCoroutineScope!!.launch {
 
-            val currentItem = itemList[currentIndex.value!!]
-            currentItem.status = ItemStatus.COMPLETE.value
+            val currentItem = itemList!![currentIndex.value!!]
             currentItem.pickQuantity = currentItem.quantity
 
             _listFragmentApiStatus.value = ApiStatus.LOADING
 
             try {
-                UpdateItemService.putItem(currentItem, true)
+                UpdateItemService.updateItem(currentItem, ItemStatus.COMPLETE)
                 updateViewToNext()
                 _listFragmentApiStatus.value = ApiStatus.DONE
             } catch (e: Exception) {
@@ -313,13 +313,12 @@ class StockListViewModel : ViewModel() {
         if (restockQuantity == null) {return}
 
         stockListCoroutineScope!!.launch {
-            val currentItem = itemList[currentIndex.value!!]
-            currentItem.status = ItemStatus.RESTOCK.value
+            val currentItem = itemList!![currentIndex.value!!]
             currentItem.restockQuantity = restockQuantity
 
             _listFragmentApiStatus.value = ApiStatus.LOADING
             try {
-                UpdateItemService.putItem(currentItem, false)
+                UpdateItemService.updateItem(currentItem, ItemStatus.RESTOCK)
                 updateViewToNext()
                 _listFragmentApiStatus.value = ApiStatus.DONE
             } catch (e: Exception) {
@@ -348,14 +347,13 @@ class StockListViewModel : ViewModel() {
             return
 
         stockListCoroutineScope!!.launch {
-            val currentItem = itemList[currentIndex.value!!]
-            currentItem.status = ItemStatus.OUTOFSTOCK.value
+            val currentItem = itemList!![currentIndex.value!!]
             currentItem.outOfStockQuantity = currentItem.quantity
 
             _listFragmentApiStatus.value = ApiStatus.LOADING
 
             try {
-                UpdateItemService.putItem(currentItem, false)
+                UpdateItemService.updateItem(currentItem, ItemStatus.OUTOFSTOCK)
                 updateViewToNext()
                 _listFragmentApiStatus.value = ApiStatus.DONE
             } catch (e: Exception) {
