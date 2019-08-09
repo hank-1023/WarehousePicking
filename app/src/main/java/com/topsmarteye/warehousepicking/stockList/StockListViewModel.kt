@@ -147,7 +147,7 @@ class StockListViewModel : ViewModel() {
                     _currentIndex.value = 0
                     _isLastItem.value = itemList!!.size <= 1
                     // update currentItem and nextItem
-                    updateItemDataWithIndex(0)
+                    updateViewWithItemOfIndex(0)
                     _inputFragmentApiStatus.value = ApiStatus.DONE
                 } else {
                     Log.d("StockListViewModel", "loadStockList is empty")
@@ -186,8 +186,18 @@ class StockListViewModel : ViewModel() {
 
     //region Logic for StockListFragment
 
+    // Function to be called to initiate update of data when next item is required
+    private fun updateViewToNext() {
+        if (isLastItem.value!!) {
+            checkForRestockItems()
+        } else {
+            _currentIndex.value = _currentIndex.value!! + 1
+            updateViewWithItemOfIndex(_currentIndex.value!!)
+        }
+    }
+
     // Update the mutable live data with the index passed in
-    private fun updateItemDataWithIndex(index: Int) {
+    private fun updateViewWithItemOfIndex(index: Int) {
         itemList!!.let {
             _currentItem.value = it[index]
             if (index < it.size - 1) {
@@ -196,15 +206,6 @@ class StockListViewModel : ViewModel() {
                 _nextItem.value = null
                 _isLastItem.value = true
             }
-        }
-    }
-
-    private fun updateViewToNext() {
-        if (isLastItem.value!!) {
-            checkForRestockItems()
-        } else {
-            _currentIndex.value = _currentIndex.value!! + 1
-            updateItemDataWithIndex(_currentIndex.value!!)
         }
     }
 
@@ -218,7 +219,7 @@ class StockListViewModel : ViewModel() {
                 val reloadListResult = reloadListForStatus(ItemStatus.RESTOCK)
 
                 if (reloadListResult) {
-                    updateItemDataWithIndex(0)
+                    updateViewWithItemOfIndex(0)
                     _eventRestockItemsAdded.value = true
                 } else {
                     // List is empty, finish activity
@@ -237,10 +238,12 @@ class StockListViewModel : ViewModel() {
         }
     }
 
+    // Will reload the list reset relevant data
+    // Return true if list is not empty
     private suspend fun reloadListForStatus(status: ItemStatus): Boolean {
         itemList = LoadOrderService.loadOrderWithStatus(_orderNumber.value!!, status)
 
-        return if (itemList!!.isNotEmpty()) {
+        return if (!itemList.isNullOrEmpty()) {
             _totalItems.value = itemList!!.size
             _currentIndex.value = 0
             _isLastItem.value = itemList!!.size <= 1
@@ -274,7 +277,7 @@ class StockListViewModel : ViewModel() {
             _listFragmentApiStatus.value = ApiStatus.LOADING
 
             try {
-                UpdateItemService.updateItem(currentItem, ItemStatus.COMPLETE)
+                UpdateItemService.updateItemWithStatus(currentItem, ItemStatus.COMPLETE)
                 updateViewToNext()
                 _listFragmentApiStatus.value = ApiStatus.DONE
             } catch (e: Exception) {
@@ -318,7 +321,7 @@ class StockListViewModel : ViewModel() {
 
             _listFragmentApiStatus.value = ApiStatus.LOADING
             try {
-                UpdateItemService.updateItem(currentItem, ItemStatus.RESTOCK)
+                UpdateItemService.updateItemWithStatus(currentItem, ItemStatus.RESTOCK)
                 updateViewToNext()
                 _listFragmentApiStatus.value = ApiStatus.DONE
             } catch (e: Exception) {
@@ -353,7 +356,7 @@ class StockListViewModel : ViewModel() {
             _listFragmentApiStatus.value = ApiStatus.LOADING
 
             try {
-                UpdateItemService.updateItem(currentItem, ItemStatus.OUTOFSTOCK)
+                UpdateItemService.updateItemWithStatus(currentItem, ItemStatus.OUTOFSTOCK)
                 updateViewToNext()
                 _listFragmentApiStatus.value = ApiStatus.DONE
             } catch (e: Exception) {
@@ -387,7 +390,7 @@ class StockListViewModel : ViewModel() {
                 val reloadResult = reloadListForStatus(ItemStatus.NOTPICKED)
 
                 if (reloadResult) {
-                    updateItemDataWithIndex(0)
+                    updateViewWithItemOfIndex(0)
                     _eventOrderReloaded.value = true
                     _listFragmentApiStatus.value = ApiStatus.DONE
                 } else {

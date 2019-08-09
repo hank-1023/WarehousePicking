@@ -154,7 +154,7 @@ class BackOrderViewModel : ViewModel() {
 
             _submitApiStatus.value = ApiStatus.LOADING
             try {
-                UpdateItemService.updateItem(item, ItemStatus.RESTOCK)
+                UpdateItemService.updateItemWithStatus(item, ItemStatus.RESTOCK)
                 _submitApiStatus.value = ApiStatus.DONE
                 _eventFinishActivity.value = true
             } catch (e: Exception) {

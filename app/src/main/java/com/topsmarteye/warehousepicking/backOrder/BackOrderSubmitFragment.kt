@@ -57,7 +57,8 @@ class BackOrderSubmitFragment : Fragment() {
                 }
 
                 val quantity = binding.restockQuantityEditText.text.toString().toInt()
-                if (quantity > viewModel.itemToRestock.value!!.quantity)
+                if (quantity <= 0 ||
+                    quantity > viewModel.itemToRestock.value!!.quantity)
                     throw Exception("Quantity is larger than possible quantity")
 
                 viewModel.onSubmit(quantity)

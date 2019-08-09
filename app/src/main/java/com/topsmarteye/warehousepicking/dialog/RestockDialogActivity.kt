@@ -56,7 +56,7 @@ class RestockDialogActivity : AppCompatActivity() {
 
         try {
             val quantity = binding.quantityEditText.text.toString().toInt()
-            if (quantity == 0 || quantity > maxQuantity) {
+            if (quantity <= 0 || quantity > maxQuantity) {
                 showErrorTextView()
                 return
             }

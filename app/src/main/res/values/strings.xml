@@ -49,7 +49,7 @@
     <string name="stock_barcode_not_found_message">该订单无此物料</string>
     <string name="restock_quantity">补货数量</string>
     <string name="submit_restock">完成补货</string>
-    <string name="restock_network_error_message">补货失败，请检查后网络</string>
+    <string name="restock_network_error_message">补货失败，请检查网络</string>
     <string name="restock_quantity_error">补货数量不正确，请重试</string>
 
 

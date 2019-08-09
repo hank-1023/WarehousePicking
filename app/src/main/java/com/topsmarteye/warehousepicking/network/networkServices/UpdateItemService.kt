@@ -10,7 +10,7 @@ import java.lang.Exception
 object UpdateItemService {
 
     // Only handles dates, item should be prepared before passed in
-    suspend fun updateItem(item: StockItem, status: ItemStatus) {
+    suspend fun updateItemWithStatus(item: StockItem, status: ItemStatus) {
         item.status = status.value
         item.updateDate = getCurrentTimeString()
 
@@ -48,7 +48,7 @@ object UpdateItemService {
         }
 
         if (!response.isSuccessful) {
-            throw Exception("updateItem error: ${response.message()}")
+            throw Exception("updateItemWithStatus error: ${response.message()}")
         }
 
     }
