@@ -43,6 +43,12 @@ class BackOrderSubmitFragment : Fragment() {
         return binding.root
     }
 
+    override fun onResume() {
+        super.onResume()
+        // start Item marquee
+        binding.itemNameTextView.isSelected = true
+    }
+
     private fun setupListeners() {
         binding.submitButton.setOnClickListener {
             try {

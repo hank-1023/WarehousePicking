@@ -81,9 +81,7 @@
                 android:layout_marginEnd="21dp"
                 app:layout_constraintEnd_toStartOf="@+id/submitButton"
                 app:layout_constraintStart_toEndOf="@+id/restockQuantityLabel"
-                android:layout_marginStart="20dp">
-            <requestFocus/>
-        </EditText>
+                android:layout_marginStart="20dp"/>
 
         <Button
                 android:text="@string/submit_restock"

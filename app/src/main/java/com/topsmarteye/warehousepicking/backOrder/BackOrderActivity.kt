@@ -11,6 +11,7 @@ import androidx.navigation.findNavController
 import com.topsmarteye.warehousepicking.R
 import com.topsmarteye.warehousepicking.databinding.ActivityBackOrderBinding
 import com.topsmarteye.warehousepicking.hideSystemUI
+import com.topsmarteye.warehousepicking.network.networkServices.LoginService
 
 class BackOrderActivity : AppCompatActivity() {
 
@@ -38,6 +39,13 @@ class BackOrderActivity : AppCompatActivity() {
 
         viewModel.eventDisableInteraction.observe(this, Observer {
             isInteractionDisabled = it
+        })
+
+        // Finish the activity if user is not logged in
+        LoginService.isLoggedIn.observe(this, Observer {
+            if (!it) {
+                finish()
+            }
         })
 
     }
