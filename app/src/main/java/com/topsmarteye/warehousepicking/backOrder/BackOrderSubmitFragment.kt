@@ -14,6 +14,7 @@ import com.topsmarteye.warehousepicking.databinding.FragmentBackOrderSubmitBindi
 import com.topsmarteye.warehousepicking.network.ApiStatus
 import com.topsmarteye.warehousepicking.popRetryDialog
 
+
 class BackOrderSubmitFragment : Fragment() {
 
     private lateinit var binding: FragmentBackOrderSubmitBinding
@@ -44,21 +45,22 @@ class BackOrderSubmitFragment : Fragment() {
 
     private fun setupListeners() {
         binding.submitButton.setOnClickListener {
-            if (binding.restockQuantityEditText.text.isNullOrEmpty())
-                return@setOnClickListener
-
             try {
+                if (binding.restockQuantityEditText.text.isNullOrEmpty()) {
+                    throw Exception("Quantity is empty")
+                }
+
                 val quantity = binding.restockQuantityEditText.text.toString().toInt()
                 if (quantity > viewModel.itemToRestock.value!!.quantity)
                     throw Exception("Quantity is larger than possible quantity")
 
                 viewModel.onSubmit(quantity)
+
             } catch (e: Exception) {
                 Log.d("BackOrderSubmitFragment", "submitButton listener error ${e.message}")
                 viewModel.onSubmitQuantityError()
             }
         }
-
 
         viewModel.submitApiStatus.observe(viewLifecycleOwner, Observer { status ->
             when(status) {

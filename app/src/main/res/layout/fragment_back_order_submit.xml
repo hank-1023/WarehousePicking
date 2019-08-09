@@ -183,7 +183,8 @@
                         app:layout_constraintStart_toEndOf="@+id/itemIDTextView"
                         app:layout_constraintHorizontal_bias="0.5"
                         app:layout_constraintEnd_toStartOf="@+id/itemLocationTextView"
-                        app:layout_constraintBaseline_toBaselineOf="@+id/itemIDTextView"/>
+                        app:layout_constraintBaseline_toBaselineOf="@+id/itemIDTextView"
+                        android:focusable="true"/>
 
                 <TextView
                         android:text="@{backOrderViewModel.itemToRestock.location}"
