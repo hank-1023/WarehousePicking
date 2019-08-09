@@ -4,7 +4,9 @@
         xmlns:tools="http://schemas.android.com/tools">
 
     <data>
-
+        <variable
+                name="LoginService"
+                type="com.topsmarteye.warehousepicking.network.networkServices.LoginService"/>
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -58,6 +60,7 @@
                 android:layout_marginTop="30dp"/>
 
         <TextView
+                android:text="@{LoginService.userData.displayName}"
                 android:id="@+id/staffIDTextView"
                 app:layout_constraintStart_toEndOf="@+id/staffLabel"
                 app:layout_constraintBaseline_toBaselineOf="@+id/staffLabel"

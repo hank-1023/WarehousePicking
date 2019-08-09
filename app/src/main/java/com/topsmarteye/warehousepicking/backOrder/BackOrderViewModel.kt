@@ -8,6 +8,7 @@ import com.topsmarteye.warehousepicking.network.ApiStatus
 import com.topsmarteye.warehousepicking.network.ItemStatus
 import com.topsmarteye.warehousepicking.network.StockItem
 import com.topsmarteye.warehousepicking.network.networkServices.LoadOrderService
+import com.topsmarteye.warehousepicking.network.networkServices.UpdateItemService
 import kotlinx.coroutines.*
 import java.lang.Exception
 
@@ -27,6 +28,10 @@ class BackOrderViewModel : ViewModel() {
     val itemToRestock: LiveData<StockItem>
         get() = _itemToRestock
 
+    private val _eventDisableInteraction = MutableLiveData<Boolean>()
+    val eventDisableInteraction: LiveData<Boolean>
+        get() = _eventDisableInteraction
+
     private val _eventKeyboardScan = MutableLiveData<Boolean>()
     val eventKeyboardScan: LiveData<Boolean>
         get() = _eventKeyboardScan
@@ -43,12 +48,24 @@ class BackOrderViewModel : ViewModel() {
     val eventNavigateToSubmit: LiveData<Boolean>
         get() = _eventNavigateToSubmit
 
+    private val _eventFinishActivity = MutableLiveData<Boolean>()
+    val eventFinishActivity: LiveData<Boolean>
+        get() = _eventFinishActivity
+
+    private val _eventSubmitQuantityError = MutableLiveData<Boolean>()
+    val eventSubmitQuantityError: LiveData<Boolean>
+        get() = _eventSubmitQuantityError
+
     private val _inputApiStatus = MutableLiveData<ApiStatus>()
     val inputApiStatus: LiveData<ApiStatus>
         get() = _inputApiStatus
 
-    private var inputJob = Job()
-    private val inputCoroutineScope = CoroutineScope(inputJob + Dispatchers.Main)
+    private val _submitApiStatus = MutableLiveData<ApiStatus>()
+    val submitApiStatus: LiveData<ApiStatus>
+        get() = _submitApiStatus
+
+    private val job = Job()
+    private val coroutineScope = CoroutineScope(job + Dispatchers.Main)
 
     init {
         _eventKeyboardScan.value = false
@@ -57,9 +74,15 @@ class BackOrderViewModel : ViewModel() {
     fun setOrderNumber(orderNumber: String) {
         _orderID.value = orderNumber
 
-        inputCoroutineScope.launch {
+        coroutineScope.launch {
             _inputApiStatus.value = ApiStatus.LOADING
             try {
+
+                // Reset order every time before loading order: 26084
+                if (orderNumber == "26084") {
+                    UpdateItemService.resetOrder(orderNumber)
+                }
+
                 val itemList = LoadOrderService.loadOrderWithStatus(orderNumber, ItemStatus.NOTPICKED)
                 if (itemList.isNullOrEmpty()) {
                     throw Exception("setOrderNumber: itemList is empty")
@@ -84,7 +107,7 @@ class BackOrderViewModel : ViewModel() {
     fun setStockBarcode(stockBarcode: String) {
         _stockBarcode.value = stockBarcode
 
-        inputCoroutineScope.launch {
+        coroutineScope.launch {
             if (itemMap.containsKey(stockBarcode)){
                 _itemToRestock.value = itemMap[stockBarcode]
                 _eventNavigateToSubmit.value = true
@@ -92,8 +115,14 @@ class BackOrderViewModel : ViewModel() {
                 _eventStockBarcodeNotFound.value = true
             }
         }
+    }
 
+    fun onDisableInteraction() {
+        _eventDisableInteraction.value = true
+    }
 
+    fun onDisableInteractionComplete() {
+        _eventDisableInteraction.value = false
     }
 
     fun onKeyboardScan() {
@@ -116,9 +145,41 @@ class BackOrderViewModel : ViewModel() {
         _eventNavigateToSubmit.value = false
     }
 
+    fun onSubmit(quantity: Int) {
+        coroutineScope.launch {
+            val item = _itemToRestock.value!!
+            item.restockQuantity = quantity
+            item.status = ItemStatus.RESTOCK.value
+
+            _submitApiStatus.value = ApiStatus.LOADING
+            try {
+                UpdateItemService.putItem(item, false)
+                _submitApiStatus.value = ApiStatus.DONE
+                _eventFinishActivity.value = true
+            } catch (e: Exception) {
+                Log.d("BackOrderViewModel", "onSubmit exception: ${e.message}")
+                _submitApiStatus.value = ApiStatus.ERROR
+            } finally {
+                _submitApiStatus.value = ApiStatus.NONE
+            }
+        }
+    }
+
+    fun onActivityFinishComplete() {
+        _eventFinishActivity.value = false
+    }
+
+    fun onSubmitQuantityError() {
+        _eventSubmitQuantityError.value = true
+    }
+
+    fun onSubmitQuantityErrorComplete() {
+        _eventSubmitQuantityError.value = false
+    }
+
     override fun onCleared() {
         super.onCleared()
-        inputJob.cancel()
+        job.cancel()
     }
 
 }

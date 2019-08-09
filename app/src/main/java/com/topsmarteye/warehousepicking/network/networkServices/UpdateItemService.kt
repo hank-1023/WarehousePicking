@@ -10,7 +10,7 @@ import java.lang.Exception
 object UpdateItemService {
 
     // Only handles dates, item should be prepared before passed in
-    suspend fun putItemWithStatus(item: StockItem, itemCompleted: Boolean) {
+    suspend fun putItem(item: StockItem, itemCompleted: Boolean) {
         item.updateDate = getCurrentTimeString()
 
         if (itemCompleted) {

@@ -145,19 +145,6 @@ class StockListActivity : AppCompatActivity() {
         }
     }
 
-//    private inner class FlingGestureListener : GestureDetector.SimpleOnGestureListener() {
-//        override fun onFling(e1: MotionEvent?, e2: MotionEvent?, velocityX: Float, velocityY: Float): Boolean {
-//            if (isStart) {
-//                stockListViewModel.onInputFragmentKeyboardScan()
-//                return true
-//            } else {
-//                return false
-//            }
-//        }
-//
-//    }
-
-
 
 
 

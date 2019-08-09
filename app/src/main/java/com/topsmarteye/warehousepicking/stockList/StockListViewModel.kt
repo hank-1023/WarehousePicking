@@ -274,7 +274,7 @@ class StockListViewModel : ViewModel() {
             _listFragmentApiStatus.value = ApiStatus.LOADING
 
             try {
-                UpdateItemService.putItemWithStatus(currentItem, true)
+                UpdateItemService.putItem(currentItem, true)
                 updateViewToNext()
                 _listFragmentApiStatus.value = ApiStatus.DONE
             } catch (e: Exception) {
@@ -319,7 +319,7 @@ class StockListViewModel : ViewModel() {
 
             _listFragmentApiStatus.value = ApiStatus.LOADING
             try {
-                UpdateItemService.putItemWithStatus(currentItem, false)
+                UpdateItemService.putItem(currentItem, false)
                 updateViewToNext()
                 _listFragmentApiStatus.value = ApiStatus.DONE
             } catch (e: Exception) {
@@ -355,7 +355,7 @@ class StockListViewModel : ViewModel() {
             _listFragmentApiStatus.value = ApiStatus.LOADING
 
             try {
-                UpdateItemService.putItemWithStatus(currentItem, false)
+                UpdateItemService.putItem(currentItem, false)
                 updateViewToNext()
                 _listFragmentApiStatus.value = ApiStatus.DONE
             } catch (e: Exception) {

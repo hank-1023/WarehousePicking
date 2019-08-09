@@ -125,8 +125,14 @@ class BackOrderInputAndScanFragment : Fragment() {
 
         viewModel.inputApiStatus.observe(viewLifecycleOwner, Observer {status ->
             when(status) {
-                ApiStatus.LOADING -> binding.progressBar.visibility = View.VISIBLE
-                ApiStatus.DONE -> binding.progressBar.visibility = View.GONE
+                ApiStatus.LOADING -> {
+                    binding.progressBar.visibility = View.VISIBLE
+                    viewModel.onDisableInteraction()
+                }
+                ApiStatus.NONE -> {
+                    binding.progressBar.visibility = View.GONE
+                    viewModel.onDisableInteractionComplete()
+                }
                 ApiStatus.ERROR -> {
                     popRetryDialog(getString(R.string.get_order_error_message), getString(R.string.retry))
                     binding.progressBar.visibility = View.GONE
@@ -148,6 +154,13 @@ class BackOrderInputAndScanFragment : Fragment() {
                     .actionBackOrderInputAndScanFragmentToBackOrderSubmitFragment())
                 viewModel.onNavigateToSubmitComplete()
             }
+        })
+
+        viewModel.eventDisableInteraction.observe(viewLifecycleOwner, Observer {
+            if (it)
+                disableInteraction()
+            else
+                enableInteraction()
         })
 
     }
@@ -177,6 +190,16 @@ class BackOrderInputAndScanFragment : Fragment() {
         binding.stockIDLabel.visibility = View.VISIBLE
         binding.stockIDEditText.visibility = View.VISIBLE
         binding.stockIDScanButton.visibility = View.VISIBLE
+    }
+
+    private fun disableInteraction() {
+        binding.orderIDEditText.isEnabled = false
+        binding.orderIDScanButton.isEnabled = false
+    }
+
+    private fun enableInteraction() {
+        binding.orderIDEditText.isEnabled = true
+        binding.orderIDScanButton.isEnabled = true
     }
 
 

@@ -12,16 +12,14 @@
     <string name="out_of_stock">短拣(3)</string>
     <string name="reset_order">重置订单(4)</string>
     <string name="pick_item">拣货(1)</string>
-    <string name="finish_order">完成订单(5)</string>
     <string name="order_number_edit_hint">请输入订单号</string>
     <string name="staff">员工:"    "</string>
-    <string name="working">工作中...</string>
+    <string name="working">工作中…</string>
     <string name="stock_picking">拣货</string>
     <string name="back_order">补货</string>
     <string name="done">下班</string>
     <string name="scan_to_login">扫描登陆</string>
     <string name="please_scan_to_login">请扫描工牌登陆</string>
-    <string name="confirm">确定</string>
     <string name="confirm_out_of_stock">该物料是否短拣？</string>
     <string name="confirm_reset_order">是否重置订单？</string>
     <string name="yes">是(2)</string>
@@ -38,8 +36,8 @@
     <string name="qrcode_error_message">登陆信息有误，请重试</string>
     <string name="logging_in">登陆中</string>
     <string name="get_order_error_message">获取订单失败，请检查后重试</string>
-    <string name="loading">读取中...</string>
-    <string name="submitting">提交中...</string>
+    <string name="loading">读取中…</string>
+    <string name="submitting">提交中…</string>
     <string name="date_formatting_error_message">日期格式错误</string>
     <string name="ignore">忽略</string>
     <string name="barcode_confirm_error_message">条码核对不正确，请重试</string>
@@ -49,6 +47,10 @@
     <string name="done_adding_restock_items">已重新添加缺货物料</string>
     <string name="maximum_quantity_format">"数量（最大：%1$d）"</string>
     <string name="stock_barcode_not_found_message">该订单无此物料</string>
+    <string name="restock_quantity">补货数量</string>
+    <string name="submit_restock">完成补货</string>
+    <string name="restock_network_error_message">补货失败，请检查后网络</string>
+    <string name="restock_quantity_error">补货数量不正确，请重试</string>
 
 
 </resources>

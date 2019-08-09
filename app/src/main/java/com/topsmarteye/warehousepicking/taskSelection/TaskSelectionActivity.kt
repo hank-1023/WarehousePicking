@@ -30,12 +30,14 @@ class TaskSelectionActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        binding = DataBindingUtil.setContentView(this, R.layout.activity_task_selection)
-        binding.lifecycleOwner = this
-
         // Will clear the viewModel on stop
         viewModel = ViewModelProviders.of(this)
             .get(TaskSelectionViewModel::class.java)
+
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_task_selection)
+        binding.lifecycleOwner = this
+        binding.loginService = LoginService
+
 
         setupProgressDialog()
         setupIntegrator()
@@ -104,14 +106,6 @@ class TaskSelectionActivity : AppCompatActivity() {
         LoginService.isLoggedIn.observe(this, Observer {
             if (!it) {
                 integrator.initiateScan()
-            }
-        })
-
-        LoginService.userData.observe(this, Observer {
-            if (it != null) {
-                binding.staffIDTextView.text = it.displayName
-            } else {
-                binding.staffIDTextView.text = null
             }
         })
 

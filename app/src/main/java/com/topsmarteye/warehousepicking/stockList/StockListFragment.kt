@@ -16,7 +16,6 @@ import com.topsmarteye.warehousepicking.*
 import com.topsmarteye.warehousepicking.dialog.RestockDialogActivity
 import com.topsmarteye.warehousepicking.dialog.YesNoDialogActivity
 import com.topsmarteye.warehousepicking.databinding.FragmentStockListBinding
-import com.topsmarteye.warehousepicking.dialog.RetryDialogActivity
 import com.topsmarteye.warehousepicking.network.ApiStatus
 
 
