@@ -48,9 +48,9 @@ class BackOrderViewModel : ViewModel() {
     val eventNavigateToSubmit: LiveData<Boolean>
         get() = _eventNavigateToSubmit
 
-    private val _eventFinishActivity = MutableLiveData<Boolean>()
-    val eventFinishActivity: LiveData<Boolean>
-        get() = _eventFinishActivity
+    private val _eventNavigateToInput = MutableLiveData<Boolean>()
+    val eventNavigateToInput: LiveData<Boolean>
+        get() = _eventNavigateToInput
 
     private val _eventSubmitQuantityError = MutableLiveData<Boolean>()
     val eventSubmitQuantityError: LiveData<Boolean>
@@ -64,8 +64,8 @@ class BackOrderViewModel : ViewModel() {
     val submitApiStatus: LiveData<ApiStatus>
         get() = _submitApiStatus
 
-    private val job = Job()
-    private val coroutineScope = CoroutineScope(job + Dispatchers.Main)
+    private var job = Job()
+    private var coroutineScope = CoroutineScope(job + Dispatchers.Main)
 
     init {
         _eventKeyboardScan.value = false
@@ -156,7 +156,7 @@ class BackOrderViewModel : ViewModel() {
             try {
                 UpdateItemService.updateItemWithStatus(item, ItemStatus.RESTOCK)
                 _submitApiStatus.value = ApiStatus.DONE
-                _eventFinishActivity.value = true
+                onNavigateToInput()
             } catch (e: Exception) {
                 Log.d("BackOrderViewModel", "onSubmit exception: ${e.message}")
                 _submitApiStatus.value = ApiStatus.ERROR
@@ -166,8 +166,18 @@ class BackOrderViewModel : ViewModel() {
         }
     }
 
-    fun onActivityFinishComplete() {
-        _eventFinishActivity.value = false
+
+    fun onNavigateToInput() {
+        // This order matters
+        job.cancel()
+
+        _eventNavigateToInput.value = true
+    }
+
+    fun onNavigateToInputComplete() {
+        _eventNavigateToInput.value = false
+        job = Job()
+        coroutineScope = CoroutineScope(job + Dispatchers.Main)
     }
 
     fun onSubmitQuantityError() {

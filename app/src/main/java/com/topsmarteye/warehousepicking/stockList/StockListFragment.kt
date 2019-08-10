@@ -44,9 +44,12 @@ class StockListFragment : Fragment() {
 
         binding.stockListViewModel = stockListViewModel
 
-        setupListeners()
-
         return binding.root
+    }
+
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
+        setupListeners()
     }
 
     override fun onResume() {

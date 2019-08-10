@@ -11,8 +11,7 @@
         <action
                 android:id="@+id/action_backOrderInputAndScanFragment_to_backOrderSubmitFragment"
                 app:destination="@id/backOrderSubmitFragment"
-                app:popUpTo="@+id/backOrderInputAndScanFragment"
-                app:popUpToInclusive="true"/>
+                />
     </fragment>
     <fragment
             android:id="@+id/backOrderSubmitFragment"

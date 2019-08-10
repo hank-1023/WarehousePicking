@@ -43,9 +43,14 @@ class BackOrderInputAndScanFragment : Fragment() {
             R.layout.fragment_back_order_input_and_scan, container, false)
         binding.lifecycleOwner = this
 
-        setListeners()
-
         return binding.root
+    }
+
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
+
+        binding.orderIDEditText.requestFocus()
+        setListeners()
     }
 
     private fun setupBarcodeIntegrator() {
@@ -56,6 +61,7 @@ class BackOrderInputAndScanFragment : Fragment() {
     private fun setListeners() {
 
         binding.orderIDEditText.setOnFocusChangeListener { _, hasFocus ->
+            // If was navigate back from
             if (hasFocus)
                 hideStockIDEditGroup()
         }
@@ -117,8 +123,6 @@ class BackOrderInputAndScanFragment : Fragment() {
         viewModel.eventLoadOrderSuccess.observe(viewLifecycleOwner, Observer {
             if (it) {
                 showStockIDEditGroup()
-                // change focus to stockIDEditText
-                binding.stockIDEditText.requestFocus()
                 viewModel.onLoadOrderSuccessComplete()
             }
         })
@@ -159,8 +163,19 @@ class BackOrderInputAndScanFragment : Fragment() {
         viewModel.eventDisableInteraction.observe(viewLifecycleOwner, Observer {
             if (it)
                 disableInteraction()
-            else
+            else {
                 enableInteraction()
+                binding.stockIDEditText.requestFocus()
+            }
+        })
+
+        viewModel.eventNavigateToInput.observe(viewLifecycleOwner, Observer {
+            // onNavigateToInputComplete will trigger false
+            if (it) {
+                showStockIDEditGroup()
+                binding.stockIDEditText.requestFocus()
+                viewModel.onNavigateToInputComplete()
+            }
         })
 
     }
@@ -178,15 +193,14 @@ class BackOrderInputAndScanFragment : Fragment() {
     }
 
     private fun hideStockIDEditGroup() {
-        //clear the text on hide
-        binding.stockIDEditText.text.clear()
-
         binding.stockIDLabel.visibility = View.GONE
         binding.stockIDEditText.visibility = View.GONE
         binding.stockIDScanButton.visibility = View.GONE
     }
 
     private fun showStockIDEditGroup() {
+        binding.stockIDEditText.text.clear()
+
         binding.stockIDLabel.visibility = View.VISIBLE
         binding.stockIDEditText.visibility = View.VISIBLE
         binding.stockIDScanButton.visibility = View.VISIBLE

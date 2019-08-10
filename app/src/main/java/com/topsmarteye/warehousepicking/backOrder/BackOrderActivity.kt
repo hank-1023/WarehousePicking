@@ -34,7 +34,13 @@ class BackOrderActivity : AppCompatActivity() {
         }
 
         binding.upButton.setOnClickListener {
-            onBackPressed()
+            if (isStart) {
+                finish()
+            } else {
+                navController.navigateUp()
+                // This will be handled in input fragment
+                viewModel.onNavigateToInput()
+            }
         }
 
         viewModel.eventDisableInteraction.observe(this, Observer {
@@ -63,11 +69,6 @@ class BackOrderActivity : AppCompatActivity() {
         super.onResume()
         // Enter the sticky immersive mode
         hideSystemUI()
-    }
-
-    override fun onBackPressed() {
-        super.onBackPressed()
-        binding.upButton.requestFocus()
     }
 
 }

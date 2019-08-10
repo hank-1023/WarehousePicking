@@ -37,10 +37,15 @@ class StockListInputAndScanFragment : Fragment() {
             R.layout.fragment_stock_list_input_and_scan, container, false)
         binding.lifecycleOwner = this
 
+        return binding.root
+    }
+
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
+
+        binding.orderIDEditText.requestFocus()
         setupViewModelListeners()
         setupViewListeners()
-
-        return binding.root
     }
 
     private fun setupBarcodeIntegrator() {

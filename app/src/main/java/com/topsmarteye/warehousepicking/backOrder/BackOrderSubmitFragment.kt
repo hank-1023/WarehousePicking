@@ -9,6 +9,7 @@ import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
+import androidx.navigation.fragment.findNavController
 import com.topsmarteye.warehousepicking.R
 import com.topsmarteye.warehousepicking.databinding.FragmentBackOrderSubmitBinding
 import com.topsmarteye.warehousepicking.network.ApiStatus
@@ -38,9 +39,14 @@ class BackOrderSubmitFragment : Fragment() {
         binding.restockQuantityEditText.hint = getString(R.string.maximum_quantity_format,
             viewModel.itemToRestock.value!!.quantity)
 
-        setupListeners()
 
         return binding.root
+    }
+
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
+
+        setupListeners()
     }
 
     override fun onResume() {
@@ -93,17 +99,16 @@ class BackOrderSubmitFragment : Fragment() {
                 enableInteraction()
         })
 
-        viewModel.eventFinishActivity.observe(viewLifecycleOwner, Observer {
-            if (it) {
-                activity!!.finish()
-                viewModel.onActivityFinishComplete()
-            }
-        })
-
         viewModel.eventSubmitQuantityError.observe(viewLifecycleOwner, Observer {
             if (it) {
                 popRetryDialog(getString(R.string.restock_quantity_error), getString(R.string.retry))
                 viewModel.onSubmitQuantityErrorComplete()
+            }
+        })
+
+        viewModel.eventNavigateToInput.observe(viewLifecycleOwner, Observer {
+            if (it) {
+                findNavController().navigateUp()
             }
         })
     }

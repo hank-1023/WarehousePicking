@@ -93,7 +93,12 @@ class StockListActivity : AppCompatActivity() {
         }
 
         binding.upButton.setOnClickListener {
-            onBackPressed()
+            if (isStart) {
+                finish()
+            } else {
+                navController.navigateUp()
+                stockListViewModel.onNavigateToInput()
+            }
         }
 
         stockListViewModel.currentIndex.observe(this, Observer {
@@ -133,15 +138,6 @@ class StockListActivity : AppCompatActivity() {
             binding.currentIndexTextView.visibility = View.VISIBLE
             binding.resetOrderButton.visibility = View.VISIBLE
             isStart = false
-        }
-    }
-
-    override fun onBackPressed() {
-        super.onBackPressed()
-
-        if (!isStart) {
-            // cancel the job for stockList
-            stockListViewModel.onNavigateToInput()
         }
     }
 
