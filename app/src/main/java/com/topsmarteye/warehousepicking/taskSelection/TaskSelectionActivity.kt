@@ -1,5 +1,6 @@
 package com.topsmarteye.warehousepicking.taskSelection
 
+import android.app.Activity
 import android.app.ProgressDialog
 import android.content.Intent
 import android.os.Bundle
@@ -135,7 +136,14 @@ class TaskSelectionActivity : AppCompatActivity() {
         when (requestCode) {
             // Dialog dismissed and should perform logout on viewModel
             RETRY_DIALOG_REQUEST_CODE -> viewModel.onLogOut()
-            LOGIN_ACTIVITY_REQUEST_CODE -> parseScannerResult(resultCode, data)
+            LOGIN_ACTIVITY_REQUEST_CODE -> {
+                if (resultCode == Activity.RESULT_CANCELED) {
+                    finish()
+                } else {
+                    parseScannerResult(resultCode, data)
+                }
+            }
+
         }
     }
 

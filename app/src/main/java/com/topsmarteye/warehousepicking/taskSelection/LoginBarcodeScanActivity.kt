@@ -9,7 +9,6 @@ import com.topsmarteye.warehousepicking.databinding.ActivityBarcodeScanBinding
 import com.topsmarteye.warehousepicking.hideSystemUI
 import com.journeyapps.barcodescanner.CaptureManager
 import com.journeyapps.barcodescanner.DecoratedBarcodeView
-import android.content.Intent
 
 
 
@@ -56,16 +55,6 @@ class LoginBarcodeScanActivity : AppCompatActivity() {
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         return barcodeScannerView.onKeyDown(keyCode, event) || super.onKeyDown(keyCode, event)
-    }
-
-    override fun onBackPressed() {
-        super.onBackPressed()
-        // Exit the app on back pressed
-        val intent = Intent(Intent.ACTION_MAIN).apply {
-            addCategory(Intent.CATEGORY_HOME)
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK
-        }
-        startActivity(intent)
     }
 
 }

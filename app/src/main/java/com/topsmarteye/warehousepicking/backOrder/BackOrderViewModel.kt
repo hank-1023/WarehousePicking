@@ -110,7 +110,7 @@ class BackOrderViewModel : ViewModel() {
         _stockBarcode.value = stockBarcode
 
         coroutineScope.launch {
-            if (itemMap!!.containsKey(stockBarcode)){
+            if (itemMap!!.containsKey(stockBarcode)) {
                 _itemToRestock.value = itemMap!![stockBarcode]
                 _eventNavigateToSubmit.value = true
             } else {

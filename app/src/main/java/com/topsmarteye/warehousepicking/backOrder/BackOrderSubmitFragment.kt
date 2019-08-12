@@ -38,7 +38,7 @@ class BackOrderSubmitFragment : Fragment() {
 
         binding.restockQuantityEditText.hint = getString(R.string.maximum_quantity_format,
             viewModel.itemToRestock.value!!.quantity)
-
+        binding.restockQuantityEditText.requestFocus()
 
         return binding.root
     }

@@ -74,6 +74,8 @@
         <EditText
                 android:layout_width="0dp"
                 style="@style/input_and_scan_edit_text_style"
+                android:paddingStart="13dp"
+                android:paddingEnd="10dp"
                 android:inputType="number"
                 android:ems="10"
                 android:id="@+id/restockQuantityEditText"
