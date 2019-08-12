@@ -87,6 +87,10 @@ class StockListActivity : AppCompatActivity() {
 //        return super.onTouchEvent(event)
 //    }
 
+    override fun onBackPressed() {
+        binding.upButton.performClick()
+    }
+
     private fun setupListener() {
         navController.addOnDestinationChangedListener { _, destination, _ ->
             changeNavItemsVisibility(destination)

@@ -71,4 +71,8 @@ class BackOrderActivity : AppCompatActivity() {
         hideSystemUI()
     }
 
+    override fun onBackPressed() {
+        binding.upButton.performClick()
+    }
+
 }
