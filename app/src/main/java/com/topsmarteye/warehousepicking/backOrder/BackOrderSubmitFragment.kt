@@ -39,7 +39,6 @@ class BackOrderSubmitFragment : Fragment() {
 
         binding.restockQuantityEditText.hint = getString(R.string.maximum_quantity_format,
             viewModel.itemToRestock.value!!.quantity)
-        binding.restockQuantityEditText.requestFocus()
 
         return binding.root
     }
@@ -47,6 +46,7 @@ class BackOrderSubmitFragment : Fragment() {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
+        binding.restockQuantityEditText.requestFocus()
         setupListeners()
     }
 
