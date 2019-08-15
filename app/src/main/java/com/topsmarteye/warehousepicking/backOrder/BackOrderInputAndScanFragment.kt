@@ -218,11 +218,13 @@ class BackOrderInputAndScanFragment : Fragment() {
 
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
 
         val result = IntentIntegrator.parseActivityResult(resultCode, data)
         // doesn't do anything if result is empty
-        if (result == null || result.contents.isNullOrEmpty()) {return}
+        if (result == null || result.contents.isNullOrEmpty()) {
+            super.onActivityResult(requestCode, resultCode, data)
+            return
+        }
 
         when (requestCode) {
             BACK_ORDER_ORDER_NUMBER_SCAN_REQUEST_CODE -> {

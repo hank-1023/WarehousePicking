@@ -39,14 +39,6 @@ class TaskSelectionViewModel : ViewModel() {
             } finally {
                 _apiStatus.value = ApiStatus.NONE
             }
-
-//            val tokenResultSuccessful = LoginService.updateAuthToken()
-//            //check if token is got and check if successfully got userdata
-//            if (tokenResultSuccessful && LoginService.loginUser(username, password)) {
-//                _apiStatus.value = ApiStatus.DONE
-//            } else {
-//                _apiStatus.value = ApiStatus.ERROR
-//            }
         }
     }
 

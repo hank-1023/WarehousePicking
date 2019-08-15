@@ -132,7 +132,6 @@ class TaskSelectionActivity : AppCompatActivity() {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
         when (requestCode) {
             // Dialog dismissed and should perform logout on viewModel
             RETRY_DIALOG_REQUEST_CODE -> viewModel.onLogOut()
@@ -142,6 +141,9 @@ class TaskSelectionActivity : AppCompatActivity() {
                 } else {
                     parseScannerResult(resultCode, data)
                 }
+            }
+            else -> {
+                super.onActivityResult(requestCode, resultCode, data)
             }
 
         }

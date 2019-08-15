@@ -218,8 +218,6 @@ class StockListFragment : Fragment() {
 
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-
         when (requestCode) {
             STOCK_LIST_NEXT_SCAN_REQUEST_CODE -> {
                 // If scan activity is cancelled
@@ -266,6 +264,9 @@ class StockListFragment : Fragment() {
                 } else {
                     stockListViewModel.onResetOrderComplete(true)
                 }
+            }
+            else -> {
+                super.onActivityResult(requestCode, resultCode, data)
             }
         }
     }
