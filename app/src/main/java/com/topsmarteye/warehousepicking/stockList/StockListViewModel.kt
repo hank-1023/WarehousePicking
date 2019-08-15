@@ -1,10 +1,12 @@
 package com.topsmarteye.warehousepicking.stockList
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.google.zxing.integration.android.IntentResult
+import com.topsmarteye.warehousepicking.R
 import com.topsmarteye.warehousepicking.network.*
 import com.topsmarteye.warehousepicking.network.networkServices.LoadOrderService
 import com.topsmarteye.warehousepicking.network.networkServices.UpdateItemService
@@ -103,12 +105,18 @@ class StockListViewModel : ViewModel() {
     val eventRestockItemsAdded: LiveData<Boolean>
         get() = _eventRestockItemsAdded
 
+    private val _eventMakeToast = MutableLiveData<String>()
+    val eventMakeToast: LiveData<String>
+        get() = _eventMakeToast
+
     private var stockListJob: Job? = null
     private var stockListCoroutineScope: CoroutineScope? = null
 
     private val _listFragmentApiStatus = MutableLiveData<ApiStatus>()
     val listFragmentApiStatus: LiveData<ApiStatus>
         get() = _listFragmentApiStatus
+
+    private var _context: Context? = null
 
 
     init {
@@ -121,6 +129,10 @@ class StockListViewModel : ViewModel() {
     }
 
     //region Logic for InputAndScanFragment
+
+    fun setContext(context: Context) {
+        _context = context
+    }
 
     // Only called once on InputAndScanFragment
     // Will reset order for order number 26084
@@ -221,6 +233,7 @@ class StockListViewModel : ViewModel() {
                 if (reloadListResult) {
                     updateViewWithItemOfIndex(0)
                     _eventRestockItemsAdded.value = true
+                    _eventMakeToast.value = _context!!.getString(R.string.done_adding_restock_items)
                 } else {
                     // List is empty, finish activity
                     _eventFinishActivity.value = true
@@ -280,6 +293,7 @@ class StockListViewModel : ViewModel() {
                 UpdateItemService.updateItemWithStatus(currentItem, ItemStatus.COMPLETE)
                 updateViewToNext()
                 _listFragmentApiStatus.value = ApiStatus.DONE
+                _eventMakeToast.value = _context!!.getString(R.string.next_success_toast)
             } catch (e: Exception) {
                 Log.d("StockListViewMode", "onNextComplete error ${e.message}")
                 _listFragmentApiStatus.value = ApiStatus.ERROR
@@ -324,6 +338,7 @@ class StockListViewModel : ViewModel() {
                 UpdateItemService.updateItemWithStatus(currentItem, ItemStatus.RESTOCK)
                 updateViewToNext()
                 _listFragmentApiStatus.value = ApiStatus.DONE
+                _eventMakeToast.value = _context!!.getString(R.string.restock_success_toast)
             } catch (e: Exception) {
                 Log.d("StockListViewMode", "onRestockComplete error ${e.message}")
                 _listFragmentApiStatus.value = ApiStatus.ERROR
@@ -359,6 +374,7 @@ class StockListViewModel : ViewModel() {
                 UpdateItemService.updateItemWithStatus(currentItem, ItemStatus.OUTOFSTOCK)
                 updateViewToNext()
                 _listFragmentApiStatus.value = ApiStatus.DONE
+                _eventMakeToast.value = _context!!.getString(R.string.out_of_stock_success_toast)
             } catch (e: Exception) {
                 Log.d("StockListViewMode", "onOutOfStockComplete error ${e.message}")
                 _listFragmentApiStatus.value = ApiStatus.ERROR
@@ -393,6 +409,7 @@ class StockListViewModel : ViewModel() {
                     updateViewWithItemOfIndex(0)
                     _eventOrderReloaded.value = true
                     _listFragmentApiStatus.value = ApiStatus.DONE
+                    _eventMakeToast.value = _context!!.getString(R.string.order_reloaded)
                 } else {
                     throw Exception("reloadListForStatus failed: List empty")
                 }
@@ -441,6 +458,10 @@ class StockListViewModel : ViewModel() {
 
     fun onRestockItemsAddedComplete() {
         _eventRestockItemsAdded.value = false
+    }
+
+    fun onMakeToastComplete() {
+        _eventMakeToast.value = null
     }
 
 

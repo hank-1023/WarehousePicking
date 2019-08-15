@@ -39,6 +39,7 @@ class StockListActivity : AppCompatActivity() {
         navController = findNavController(R.id.stockListNavHostFragment)
         // The stockListViewModel will be shared between this activity and its fragments
         stockListViewModel = ViewModelProviders.of(this).get(StockListViewModel::class.java)
+        stockListViewModel.setContext(this)
         binding.stockListViewModel = stockListViewModel
 
 //        gestureDetector = GestureDetector(this, FlingGestureListener())

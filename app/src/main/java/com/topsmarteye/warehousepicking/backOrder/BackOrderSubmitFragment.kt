@@ -5,6 +5,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
@@ -80,6 +81,9 @@ class BackOrderSubmitFragment : Fragment() {
                 ApiStatus.LOADING -> {
                     binding.progressBar.visibility = View.VISIBLE
                     viewModel.onDisableInteraction()
+                }
+                ApiStatus.DONE -> {
+                    Toast.makeText(context, getString(R.string.back_order_success_toast), Toast.LENGTH_SHORT).show()
                 }
                 ApiStatus.ERROR -> {
                     popRetryDialog(getString(R.string.restock_network_error_message), getString(R.string.retry))

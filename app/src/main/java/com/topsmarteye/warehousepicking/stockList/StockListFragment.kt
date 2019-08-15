@@ -160,15 +160,20 @@ class StockListFragment : Fragment() {
 
         stockListViewModel.eventOrderReloaded.observe(viewLifecycleOwner, Observer {
             if (it) {
-                Toast.makeText(context, getString(R.string.order_reloaded), Toast.LENGTH_LONG).show()
                 stockListViewModel.onOrderReloadedComplete()
             }
         })
 
         stockListViewModel.eventRestockItemsAdded.observe(viewLifecycleOwner, Observer {
             if (it) {
-                Toast.makeText(context, getString(R.string.done_adding_restock_items), Toast.LENGTH_LONG).show()
                 stockListViewModel.onRestockItemsAddedComplete()
+            }
+        })
+
+        stockListViewModel.eventMakeToast.observe(viewLifecycleOwner, Observer {
+            if (it != null) {
+                Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+                stockListViewModel.onMakeToastComplete()
             }
         })
     }

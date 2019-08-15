@@ -51,6 +51,10 @@
     <string name="submit_restock">完成补货</string>
     <string name="restock_network_error_message">补货失败，请检查网络</string>
     <string name="restock_quantity_error">补货数量不正确，请重试</string>
+    <string name="next_success_toast">拣货成功</string>
+    <string name="restock_success_toast">已提交补货</string>
+    <string name="out_of_stock_success_toast">短拣提交成功</string>
+    <string name="back_order_success_toast">补货提交成功</string>
 
 
 </resources>
