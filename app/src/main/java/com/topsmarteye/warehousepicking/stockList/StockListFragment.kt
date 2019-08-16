@@ -61,7 +61,6 @@ class StockListFragment : Fragment() {
     private fun setupBarcodeIntegrator() {
         integrator = IntentIntegrator.forSupportFragment(this)
         integrator.setDesiredBarcodeFormats(IntentIntegrator.ONE_D_CODE_TYPES)
-        integrator.setPrompt(getString(R.string.please_scan_stock_barcode))
     }
 
     private fun setupListeners() {
@@ -79,6 +78,8 @@ class StockListFragment : Fragment() {
             if (it) {
                 binding.nextButton.requestFocus()
                 integrator.setRequestCode(STOCK_LIST_NEXT_SCAN_REQUEST_CODE)
+                integrator.setPrompt(getString(R.string.barcode_scan_prompt_format,
+                    "\"" + stockListViewModel.currentItem.value!!.name + "\""))
                 integrator.initiateScan()
             }
         })
@@ -87,6 +88,8 @@ class StockListFragment : Fragment() {
             if (it) {
                 binding.needsRestockingButton.requestFocus()
                 integrator.setRequestCode(STOCK_LIST_RESTOCK_SCAN_REQUEST_CODE)
+                integrator.setPrompt(getString(R.string.barcode_scan_prompt_format,
+                    "\"" + stockListViewModel.currentItem.value!!.name + "\""))
                 integrator.initiateScan()
             }
         })

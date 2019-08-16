@@ -55,6 +55,7 @@
     <string name="restock_success_toast">已提交补货</string>
     <string name="out_of_stock_success_toast">短拣提交成功</string>
     <string name="back_order_success_toast">补货提交成功</string>
+    <string name="barcode_scan_prompt_format">"请扫描%1$s的条码"</string>
 
 
 </resources>
