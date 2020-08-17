@@ -3,7 +3,7 @@
 
 Runs on Android Smart glasses free warehouse pickers' hands. Written with Kotlin and AndroidX.
 
-The app contains two components, the "Picking" option enables you to fetch all items needed to be picked from an order. The "Back Order" option enables user to record back orders of an item if an item is out of stock.
+The app contains two components, the "Picking" option let users fetch all items beloging to an order, item status can be dynamic and can be updated during runtime (when other pickers are doing the same order). The "Back Order" option enables user to record back orders of an item if an item is out of stock.
 
 Since typing on smart glasses are virtually "impossible" and would create a bad user experience, most of the app's input is done using QRCode scanning or otherwise 1-dimension swipe and tap.
 
