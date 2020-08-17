@@ -7,7 +7,7 @@ The app contains two components, the "Picking" option let users fetch all items 
 
 Since typing on smart glasses are virtually "impossible" and would create a bad user experience, most of the app's input is done using QRCode scanning or otherwise 1-dimension swipe and tap.
 
-Pick Items:
+Picking Items:
 
 <img src="img/1.gif" width="400">
 
